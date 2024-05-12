@@ -3,15 +3,18 @@ project:
 
 website:
   title: "AI & ML Blogs"
-  description: "Illustrated tutorials about large language models, graph neural networks, and convex optimization using Python."
   site-url: https://josephassiga.github.io/
   navbar:
-    right:
+    background: primary
+    left: 
       - about.qmd
+    right:
       - icon: github
         href: https://github.com/josephassiga
       - icon: twitter
         href: https://twitter.com/assigajoseph
+      - icon: linkedin
+        href: https://www.linkedin.com/in/josephassiga/
   favicon: images/favicon.ico
   twitter-card: true
   open-graph: true
