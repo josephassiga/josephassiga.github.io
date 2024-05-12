@@ -1,0 +1,19 @@
+---
+title: "About"
+image: images/profile.jpeg
+about:
+  template: jolla
+  links:
+    - icon: twitter
+      text: Twitter
+      href: https://twitter.com/assigajoseph
+    - icon: linkedin
+      text: LinkedIn
+      href: https://www.linkedin.com/in/josephassiga/
+    - icon: github
+      text: Github
+      href: https://github.com/josephassiga
+
+---
+
+About this blog
