@@ -72,7 +72,6 @@ kramdown:
   show_warnings     : false
 
 # Add themes
-theme: 
 remote_theme: pages-themes/cayman@v0.2.0
 
 # Stylesheets 
