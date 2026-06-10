@@ -1,10 +1,10 @@
 [
   {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "AI & ML Blogs",
+    "objectID": "templates/post-template.html",
+    "href": "templates/post-template.html",
+    "title": "Post Title",
     "section": "",
-    "text": "Post With Code\n\n\n\n\n\n\n\n\nMay 12, 2024\n\n\nJoseph Assiga\n\n\n\n\n\n\n\n\n\n\n\n\nWelcome To My Blog\n\n\n\n\n\n\n\n\nMay 9, 2024\n\n\nJoseph Assiga\n\n\n\n\n\nNo matching items"
+    "text": "Summary\nA concise summary of the post and key takeaways.\n\n\nBackground\nContext and motivation for this exploration.\n\n\nTechnical Analysis\n\nArchitecture\nHow it works under the hood\nTrade-offs and performance considerations\n\n\n\nExamples\nInclude code snippets, diagrams, or benchmarks.\n\n\nConclusion\nFinal recommendations and when to use this approach.\n\nTags: architecture, deep-dive"
   },
   {
     "objectID": "posts/post-with-code/index.html",
@@ -14,17 +14,52 @@
     "text": "This is a post with executable code."
   },
   {
+    "objectID": "about.html",
+    "href": "about.html",
+    "title": "About",
+    "section": "",
+    "text": "I write technical deep dives, architecture explorations, and honest product evaluations. Posts aim to go beyond tutorials: they explain why systems behave the way they do and when to choose one approach over another."
+  },
+  {
+    "objectID": "about.html#about-this-blog",
+    "href": "about.html#about-this-blog",
+    "title": "About",
+    "section": "",
+    "text": "I write technical deep dives, architecture explorations, and honest product evaluations. Posts aim to go beyond tutorials: they explain why systems behave the way they do and when to choose one approach over another."
+  },
+  {
+    "objectID": "about.html#about-me",
+    "href": "about.html#about-me",
+    "title": "About",
+    "section": "About me",
+    "text": "About me\nHi — I’m Joseph. I work with cloud platforms, distributed systems, and developer tools. I like explaining trade-offs, drawing architecture diagrams, and testing ideas with small prototypes."
+  },
+  {
+    "objectID": "about.html#connect",
+    "href": "about.html#connect",
+    "title": "About",
+    "section": "Connect",
+    "text": "Connect\nFind me on the links above. If you’d like to collaborate or share feedback, reach out on Twitter or GitHub."
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Technical Deep Dives",
+    "section": "",
+    "text": "title: “Technical Deep Dives” description: “Deep technical analyses, architecture notes, and product explorations.” listing: contents: posts sort: “date desc” type: cards categories: false sort-ui: false filter-ui: false page-layout: full title-block-banner: false\n\n\n\n\n\nThis site hosts long-form, practical analyses of tools and products I use — focusing on architecture, trade-offs, and real-world fit."
+  },
+  {
+    "objectID": "index.html#title",
+    "href": "index.html#title",
+    "title": "Technical Deep Dives",
+    "section": "",
+    "text": "title: “Technical Deep Dives” description: “Deep technical analyses, architecture notes, and product explorations.” listing: contents: posts sort: “date desc” type: cards categories: false sort-ui: false filter-ui: false page-layout: full title-block-banner: false\n\n\n\n\n\nThis site hosts long-form, practical analyses of tools and products I use — focusing on architecture, trade-offs, and real-world fit."
+  },
+  {
     "objectID": "posts/welcome/index.html",
     "href": "posts/welcome/index.html",
     "title": "Welcome To My Blog",
     "section": "",
     "text": "This is the first post in a Quarto blog. Welcome!\n\nSince this post doesn’t specify an explicit image, the first image in the post will be used in the listing page of posts."
-  },
-  {
-    "objectID": "about.html",
-    "href": "about.html",
-    "title": "About",
-    "section": "",
-    "text": "About this blog"
   }
 ]

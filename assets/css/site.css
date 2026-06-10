@@ -1,0 +1,78 @@
+/* Site styles — improved typography, hero, listing cards, and code blocks */
+:root{
+  --accent:#0d6efd; /* bootstrap primary */
+  --bg:#ffffff;
+  --muted:#6c757d;
+  --max-width:1100px;
+}
+
+html,body{
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  color:#222;
+  background:var(--bg);
+  margin:0;
+  padding:0;
+}
+
+.container--narrow{
+  max-width:var(--max-width);
+  margin:0 auto;
+  padding:2rem 1rem;
+}
+
+/* Hero */
+.site-hero{
+  background:linear-gradient(180deg, rgba(13,110,253,0.06), rgba(13,110,253,0.02));
+  border-radius:8px;
+  padding:3rem 1.5rem;
+  margin:1.5rem 0;
+}
+.site-hero h1{
+  margin:0 0 .25rem 0;
+  font-size:2.1rem;
+}
+.site-hero p.lead{
+  margin:0;
+  color:var(--muted);
+  font-size:1.05rem;
+}
+
+/* Listing grid */
+.posts-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));
+  gap:1rem;
+  margin:1.5rem 0;
+}
+.post-card{
+  border:1px solid #e9ecef;
+  border-radius:8px;
+  padding:1rem;
+  background:#fff;
+  transition:transform .15s ease, box-shadow .15s ease;
+}
+.post-card:hover{transform:translateY(-4px);box-shadow:0 6px 20px rgba(16,24,40,0.06)}
+.post-card .meta{color:var(--muted);font-size:.9rem;margin-bottom:.5rem}
+.post-card h3{margin:.2rem 0 .6rem 0}
+
+/* Responsive image */
+img.responsive{max-width:100%;height:auto;border-radius:6px}
+
+/* Code block tweaks */
+pre.qmd-code, pre code{
+  background:#0b1220;
+  color:#e6edf3;
+  padding:1rem;
+  border-radius:6px;
+  overflow:auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace;
+  font-size:.92rem;
+}
+
+/* Small utilities */
+.kicker{display:inline-block;padding:.15rem .5rem;border-radius:999px;background:#f1f5f9;color:#0b1220;font-weight:600;font-size:.78rem}
+
+@media (max-width:640px){
+  .site-hero{padding:1.5rem}
+  .site-hero h1{font-size:1.5rem}
+}
