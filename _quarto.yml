@@ -65,7 +65,7 @@ website:
 
 format:
   html:
-    theme: cosmo
+    theme: Cerulean
     css: styles.css
     toc: true
     toc-depth: 3
