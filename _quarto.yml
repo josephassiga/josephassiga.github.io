@@ -1,9 +1,6 @@
 project:
   type: website
-  title: josephassiga.github.io
-
-book:
-  authors: ["Joseph Assiga"]
+  title: "josephassiga.github.io"
 
 website:
   title: "Technical Deep Dives — Joseph Assiga"
@@ -13,8 +10,10 @@ website:
   twitter-card: true
   open-graph: true
   page-footer: "© Joseph Assiga"
-  logo: images/profile.jpeg
+  
+  # 👇 MOVE LOGO INSIDE NAVBAR HERE
   navbar:
+    logo: images/profile.jpeg
     background: primary
     left:
       - text: Home
@@ -22,7 +21,7 @@ website:
       - text: About
         href: about.qmd
       - text: Posts
-        href: index.qmd
+        href: posts.qmd
     right:
       - icon: github
         href: https://github.com/josephassiga
@@ -31,13 +30,7 @@ website:
       - icon: linkedin
         href: https://www.linkedin.com/in/josephassiga/
 
-collections:
-  posts:
-    type: posts
-    path: posts
-    url: /posts
-    sort: date desc
-    template: post
+  search: true 
 
 format:
   html:
@@ -46,9 +39,3 @@ format:
     code-copy: true
     toc: true
     highlight-style: github
-    include-in-header: []
-
-search: true
-
-
-

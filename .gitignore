@@ -1,2 +1,5 @@
+# Quarto internal cache and working directory
 /.quarto/
+
+# Quarto build output directory (where the rendered HTML goes)
 /_site/
