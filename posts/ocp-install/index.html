@@ -81,7 +81,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../../site_libs/quarto-html/quarto-syntax-highlighting-de63f62b328812d8e578a4d74e282472.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-e821085a919e122585812f1234b61b3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-f556d904efcb49fd30ed882c964a5ef1.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -110,9 +110,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   }
 }</script>
 <style>html{ scroll-behavior: smooth; }</style>
-<script src="../../site_libs/quarto-diagram/mermaid.min.js"></script>
-<script src="../../site_libs/quarto-diagram/mermaid-init.js"></script>
-<link href="../../site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
 
 
 <link rel="stylesheet" href="../../styles.css">
@@ -262,9 +259,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#why-this-matters" id="toc-why-this-matters" class="nav-link active" data-scroll-target="#why-this-matters">Why this matters</a></li>
   <li><a href="#aws-prerequisites-at-a-glance" id="toc-aws-prerequisites-at-a-glance" class="nav-link" data-scroll-target="#aws-prerequisites-at-a-glance">AWS prerequisites — at a glance</a></li>
   <li><a href="#prerequisites" id="toc-prerequisites" class="nav-link" data-scroll-target="#prerequisites">Prerequisites</a></li>
-  <li><a href="#how-the-install-script-works" id="toc-how-the-install-script-works" class="nav-link" data-scroll-target="#how-the-install-script-works">How the install script works</a></li>
-  <li><a href="#the-script-annotated" id="toc-the-script-annotated" class="nav-link" data-scroll-target="#the-script-annotated">The script (annotated)</a></li>
-  <li><a href="#example-install-config.yaml" id="toc-example-install-config.yaml" class="nav-link" data-scroll-target="#example-install-config.yaml">Example <code>install-config.yaml</code></a></li>
+  <li><a href="#the-script-annotated" id="toc-the-script-annotated" class="nav-link" data-scroll-target="#the-script-annotated">The script (annotated)</a>
+  <ul class="collapse">
+  <li><a href="#patch-the-host" id="toc-patch-the-host" class="nav-link" data-scroll-target="#patch-the-host">1. Patch the host</a></li>
+  <li><a href="#working-directory-and-pinned-versions" id="toc-working-directory-and-pinned-versions" class="nav-link" data-scroll-target="#working-directory-and-pinned-versions">2. Working directory and pinned versions</a></li>
+  <li><a href="#install-the-oc-and-kubectl-clients" id="toc-install-the-oc-and-kubectl-clients" class="nav-link" data-scroll-target="#install-the-oc-and-kubectl-clients">3. Install the <code>oc</code> and <code>kubectl</code> clients</a></li>
+  <li><a href="#install-the-openshift-install-binary" id="toc-install-the-openshift-install-binary" class="nav-link" data-scroll-target="#install-the-openshift-install-binary">4. Install the <code>openshift-install</code> binary</a></li>
+  <li><a href="#generate-the-cluster-ssh-key" id="toc-generate-the-cluster-ssh-key" class="nav-link" data-scroll-target="#generate-the-cluster-ssh-key">5. Generate the cluster SSH key</a></li>
+  <li><a href="#launch-the-install" id="toc-launch-the-install" class="nav-link" data-scroll-target="#launch-the-install">6. Launch the install</a></li>
+  </ul></li>
+  <li><a href="#prepare-the-install-config.yaml-file" id="toc-prepare-the-install-config.yaml-file" class="nav-link" data-scroll-target="#prepare-the-install-config.yaml-file">Prepare the <code>install-config.yaml</code> file:</a></li>
   <li><a href="#important-notes-best-practices" id="toc-important-notes-best-practices" class="nav-link" data-scroll-target="#important-notes-best-practices">Important notes &amp; best practices</a></li>
   <li><a href="#troubleshooting" id="toc-troubleshooting" class="nav-link" data-scroll-target="#troubleshooting">Troubleshooting</a></li>
   <li><a href="#wrap-up" id="toc-wrap-up" class="nav-link" data-scroll-target="#wrap-up">Wrap-up</a></li>
@@ -364,124 +368,133 @@ Figure&nbsp;3: Create the public Route 53 hosted zone.
 <li>A valid OpenShift pull secret and an SSH key.</li>
 </ul>
 </section>
-<section id="how-the-install-script-works" class="level2">
-<h2 class="anchored" data-anchor-id="how-the-install-script-works">How the install script works</h2>
-<div class="cell" data-layout-align="default">
-<div class="cell-output-display">
-<div>
-<p></p><figure class="figure"><p></p>
-<div>
-<pre class="mermaid mermaid-js">flowchart TD
-  A[Start] --&gt; B[Create tools dir]
-  B --&gt; C[Set env vars]
-  C --&gt; D[Download oc client]
-  D --&gt; E[Install oc &amp; kubectl]
-  E --&gt; F[Download openshift-install]
-  F --&gt; G[Install openshift-install binary]
-  G --&gt; H[Generate SSH key &amp; add to agent]
-  H --&gt; I[Write install-config.yaml]
-  I --&gt; J[Run openshift-install create cluster]
-  J --&gt; K[Wait for cluster readiness]
-  K --&gt; L[Done]
-</pre>
-</div>
-<p></p></figure><p></p>
-</div>
-</div>
-</div>
-</section>
 <section id="the-script-annotated" class="level2">
 <h2 class="anchored" data-anchor-id="the-script-annotated">The script (annotated)</h2>
-<p>Read it carefully and adapt the variables to your environment before running.</p>
-<div class="code-with-filename">
-<div class="code-with-filename-file">
-<pre><strong>ocp-install.sh</strong></pre>
+<p>Rather than dropping the full <code>ocp-install.sh</code> here as one block, this section walks through the script <strong>one command group at a time</strong> so you can copy, adapt, and run each step independently.</p>
+<div class="callout callout-style-simple callout-tip">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-filename="ocp-install.sh"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1"></a><span class="co">#!/usr/bin/env bash</span></span>
-<span id="cb1-2"><a href="#cb1-2"></a><span class="bu">set</span> <span class="at">-euo</span> pipefail</span>
-<span id="cb1-3"><a href="#cb1-3"></a></span>
-<span id="cb1-4"><a href="#cb1-4"></a><span class="ex">yum</span> update <span class="at">-y</span></span>
-<span id="cb1-5"><a href="#cb1-5"></a></span>
-<span id="cb1-6"><a href="#cb1-6"></a><span class="fu">mkdir</span> <span class="at">-p</span> tools <span class="kw">&amp;&amp;</span> <span class="bu">cd</span> tools/</span>
-<span id="cb1-7"><a href="#cb1-7"></a></span>
-<span id="cb1-8"><a href="#cb1-8"></a><span class="co"># Pin a specific minor for reproducibility.</span></span>
-<span id="cb1-9"><a href="#cb1-9"></a><span class="bu">export</span> <span class="va">OCP_VERSION</span><span class="op">=</span><span class="st">"latest-4.22"</span></span>
-<span id="cb1-10"><a href="#cb1-10"></a><span class="bu">export</span> <span class="va">ARCH</span><span class="op">=</span><span class="st">"x86_64"</span></span>
-<span id="cb1-11"><a href="#cb1-11"></a><span class="bu">export</span> <span class="va">HOST_ARCH</span><span class="op">=</span><span class="st">"</span><span class="va">$(</span><span class="fu">uname</span> <span class="at">-m</span><span class="va">)</span><span class="st">"</span></span>
-<span id="cb1-12"><a href="#cb1-12"></a></span>
-<span id="cb1-13"><a href="#cb1-13"></a><span class="co"># --- oc / kubectl ---</span></span>
-<span id="cb1-14"><a href="#cb1-14"></a><span class="ex">curl</span> <span class="at">-fsSLk</span> <span class="dt">\</span></span>
-<span id="cb1-15"><a href="#cb1-15"></a>  <span class="st">"https://mirror.openshift.com/pub/openshift-v4/</span><span class="va">${HOST_ARCH}</span><span class="st">/clients/ocp/</span><span class="va">${OCP_VERSION}</span><span class="st">/openshift-client-linux.tar.gz"</span> <span class="dt">\</span></span>
-<span id="cb1-16"><a href="#cb1-16"></a>  <span class="at">-o</span> oc.tar.gz</span>
-<span id="cb1-17"><a href="#cb1-17"></a><span class="fu">tar</span> zxf oc.tar.gz</span>
-<span id="cb1-18"><a href="#cb1-18"></a><span class="fu">rm</span> <span class="at">-f</span> oc.tar.gz README.md</span>
-<span id="cb1-19"><a href="#cb1-19"></a><span class="fu">chmod</span> +x oc kubectl</span>
-<span id="cb1-20"><a href="#cb1-20"></a><span class="fu">sudo</span> mv oc kubectl /usr/local/bin/</span>
-<span id="cb1-21"><a href="#cb1-21"></a></span>
-<span id="cb1-22"><a href="#cb1-22"></a><span class="co"># --- openshift-install ---</span></span>
-<span id="cb1-23"><a href="#cb1-23"></a><span class="ex">curl</span> <span class="at">-fsSLk</span> <span class="dt">\</span></span>
-<span id="cb1-24"><a href="#cb1-24"></a>  <span class="st">"https://mirror.openshift.com/pub/openshift-v4/</span><span class="va">${HOST_ARCH}</span><span class="st">/clients/ocp/</span><span class="va">${OCP_VERSION}</span><span class="st">/openshift-install-linux.tar.gz"</span> <span class="dt">\</span></span>
-<span id="cb1-25"><a href="#cb1-25"></a>  <span class="at">-o</span> openshift-install-linux.tar.gz</span>
-<span id="cb1-26"><a href="#cb1-26"></a><span class="fu">tar</span> zxf openshift-install-linux.tar.gz</span>
-<span id="cb1-27"><a href="#cb1-27"></a><span class="fu">rm</span> <span class="at">-f</span> openshift-install-linux.tar.gz README.md</span>
-<span id="cb1-28"><a href="#cb1-28"></a><span class="fu">chmod</span> +x openshift-install</span>
-<span id="cb1-29"><a href="#cb1-29"></a><span class="fu">sudo</span> mv openshift-install /usr/local/bin/</span>
-<span id="cb1-30"><a href="#cb1-30"></a></span>
-<span id="cb1-31"><a href="#cb1-31"></a><span class="co"># --- SSH key for cluster nodes ---</span></span>
-<span id="cb1-32"><a href="#cb1-32"></a><span class="fu">ssh-keygen</span> <span class="at">-t</span> ed25519 <span class="at">-N</span> <span class="st">''</span> <span class="at">-f</span> ~/.ssh/rhoai-demo</span>
-<span id="cb1-33"><a href="#cb1-33"></a><span class="bu">eval</span> <span class="st">"</span><span class="va">$(</span><span class="fu">ssh-agent</span> <span class="at">-s</span><span class="va">)</span><span class="st">"</span></span>
-<span id="cb1-34"><a href="#cb1-34"></a><span class="fu">ssh-add</span> ~/.ssh/rhoai-demo</span>
-<span id="cb1-35"><a href="#cb1-35"></a></span>
-<span id="cb1-36"><a href="#cb1-36"></a><span class="co"># --- Launch the install ---</span></span>
-<span id="cb1-37"><a href="#cb1-37"></a><span class="fu">mkdir</span> <span class="at">-p</span> ocp-install</span>
-<span id="cb1-38"><a href="#cb1-38"></a><span class="co"># put install-config.yaml in ./ocp-install first, then:</span></span>
-<span id="cb1-39"><a href="#cb1-39"></a><span class="ex">openshift-install</span> create cluster <span class="at">--dir</span> ocp-install <span class="at">--log-level</span><span class="op">=</span>info</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout-body-container">
+<p>The whole file is also available as a single download: <a href="../../images/ocp-install.sh"><code>ocp-install.sh</code></a>. The sections below correspond 1:1 to the blocks inside it.</p>
+</div>
+</div>
+</div>
+<section id="patch-the-host" class="level3">
+<h3 class="anchored" data-anchor-id="patch-the-host">1. Patch the host</h3>
+<p>A predictable starting state. Run a full package update so the build host isn’t carrying half-applied kernel or <code>curl</code> patches when the installer hits the network.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1"></a><span class="fu">sudo</span> yum update <span class="at">-y</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="working-directory-and-pinned-versions" class="level3">
+<h3 class="anchored" data-anchor-id="working-directory-and-pinned-versions">2. Working directory and pinned versions</h3>
+<p>Everything below assumes a dedicated <code>tools/</code> directory and three exported variables. Pinning <code>OCP_VERSION</code> to a specific release (not <code>latest-*</code>) is what makes the install reproducible weeks later.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> tools <span class="kw">&amp;&amp;</span> <span class="bu">cd</span> tools/</span>
+<span id="cb2-2"><a href="#cb2-2"></a></span>
+<span id="cb2-3"><a href="#cb2-3"></a><span class="bu">export</span> <span class="va">OCP_VERSION</span><span class="op">=</span><span class="st">"latest-4.22"</span>   <span class="co"># pin to e.g. 4.22.3 for production</span></span>
+<span id="cb2-4"><a href="#cb2-4"></a><span class="bu">export</span> <span class="va">ARCH</span><span class="op">=</span><span class="st">"x86_64"</span></span>
+<span id="cb2-5"><a href="#cb2-5"></a><span class="bu">export</span> <span class="va">HOST_ARCH</span><span class="op">=</span><span class="st">"</span><span class="va">$(</span><span class="fu">uname</span> <span class="at">-m</span><span class="va">)</span><span class="st">"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="install-the-oc-and-kubectl-clients" class="level3">
+<h3 class="anchored" data-anchor-id="install-the-oc-and-kubectl-clients">3. Install the <code>oc</code> and <code>kubectl</code> clients</h3>
+<p>Download the client tarball from the Red Hat mirror, extract the two binaries, and move them onto <code>PATH</code>. The <code>-fsSL</code> flags make <code>curl</code> fail loudly on HTTP errors instead of silently writing an HTML error page into <code>oc.tar.gz</code>.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1"></a><span class="ex">curl</span> <span class="at">-fsSLk</span> <span class="dt">\</span></span>
+<span id="cb3-2"><a href="#cb3-2"></a>  <span class="st">"https://mirror.openshift.com/pub/openshift-v4/</span><span class="va">${HOST_ARCH}</span><span class="st">/clients/ocp/</span><span class="va">${OCP_VERSION}</span><span class="st">/openshift-client-linux.tar.gz"</span> <span class="dt">\</span></span>
+<span id="cb3-3"><a href="#cb3-3"></a>  <span class="at">-o</span> oc.tar.gz</span>
+<span id="cb3-4"><a href="#cb3-4"></a></span>
+<span id="cb3-5"><a href="#cb3-5"></a><span class="fu">tar</span> zxf oc.tar.gz</span>
+<span id="cb3-6"><a href="#cb3-6"></a><span class="fu">rm</span> <span class="at">-f</span> oc.tar.gz README.md</span>
+<span id="cb3-7"><a href="#cb3-7"></a><span class="fu">chmod</span> +x oc kubectl</span>
+<span id="cb3-8"><a href="#cb3-8"></a><span class="fu">sudo</span> mv oc kubectl /usr/local/bin/</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Verify before moving on:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1"></a><span class="ex">oc</span> version <span class="at">--client</span></span>
+<span id="cb4-2"><a href="#cb4-2"></a><span class="ex">kubectl</span> version <span class="at">--client</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="install-the-openshift-install-binary" class="level3">
+<h3 class="anchored" data-anchor-id="install-the-openshift-install-binary">4. Install the <code>openshift-install</code> binary</h3>
+<p>Same pattern, different tarball. This is the installer that orchestrates the bootstrap node, control plane, and AWS resources.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1"></a><span class="ex">curl</span> <span class="at">-fsSLk</span> <span class="dt">\</span></span>
+<span id="cb5-2"><a href="#cb5-2"></a>  <span class="st">"https://mirror.openshift.com/pub/openshift-v4/</span><span class="va">${HOST_ARCH}</span><span class="st">/clients/ocp/</span><span class="va">${OCP_VERSION}</span><span class="st">/openshift-install-linux.tar.gz"</span> <span class="dt">\</span></span>
+<span id="cb5-3"><a href="#cb5-3"></a>  <span class="at">-o</span> openshift-install-linux.tar.gz</span>
+<span id="cb5-4"><a href="#cb5-4"></a></span>
+<span id="cb5-5"><a href="#cb5-5"></a><span class="fu">tar</span> zxf openshift-install-linux.tar.gz</span>
+<span id="cb5-6"><a href="#cb5-6"></a><span class="fu">rm</span> <span class="at">-f</span> openshift-install-linux.tar.gz README.md</span>
+<span id="cb5-7"><a href="#cb5-7"></a><span class="fu">chmod</span> +x openshift-install</span>
+<span id="cb5-8"><a href="#cb5-8"></a><span class="fu">sudo</span> mv openshift-install /usr/local/bin/</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Verify the version matches <code>OCP_VERSION</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1"></a><span class="ex">openshift-install</span> version</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="generate-the-cluster-ssh-key" class="level3">
+<h3 class="anchored" data-anchor-id="generate-the-cluster-ssh-key">5. Generate the cluster SSH key</h3>
+<p>The installer bakes this public key into every node so you can <code>ssh core@…</code> later for diagnostics. Use a dedicated key per cluster — don’t reuse your personal one.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1"></a><span class="fu">ssh-keygen</span> <span class="at">-t</span> ed25519 <span class="at">-N</span> <span class="st">''</span> <span class="at">-f</span> ~/.ssh/rhoai-demo</span>
+<span id="cb7-2"><a href="#cb7-2"></a><span class="bu">eval</span> <span class="st">"</span><span class="va">$(</span><span class="fu">ssh-agent</span> <span class="at">-s</span><span class="va">)</span><span class="st">"</span></span>
+<span id="cb7-3"><a href="#cb7-3"></a><span class="fu">ssh-add</span> ~/.ssh/rhoai-demo</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-simple callout-warning">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p><code>~/.ssh/rhoai-demo</code> is a <strong>private key</strong>. Add it to <code>.gitignore</code> and never copy it into a container image or CI artifact.</p>
+</div>
+</div>
 </div>
 </section>
-<section id="example-install-config.yaml" class="level2">
-<h2 class="anchored" data-anchor-id="example-install-config.yaml">Example <code>install-config.yaml</code></h2>
+<section id="launch-the-install" class="level3">
+<h3 class="anchored" data-anchor-id="launch-the-install">6. Launch the install</h3>
+<p>Drop the <code>install-config.yaml</code> from the next section into <code>./ocp-install/</code>, then hand control over to the installer. The <code>--dir</code> flag is what makes re-runs, <code>gather</code>, and <code>destroy</code> work consistently against the same state.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> ocp-install</span>
+<span id="cb8-2"><a href="#cb8-2"></a><span class="co"># Place install-config.yaml inside ./ocp-install/ first, then:</span></span>
+<span id="cb8-3"><a href="#cb8-3"></a><span class="ex">openshift-install</span> create cluster <span class="at">--dir</span> ocp-install <span class="at">--log-level</span><span class="op">=</span>info</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Expect 30–45 minutes for an AWS IPI install. Watch progress with:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1"></a><span class="fu">tail</span> <span class="at">-f</span> ocp-install/.openshift_install.log</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</section>
+<section id="prepare-the-install-config.yaml-file" class="level2">
+<h2 class="anchored" data-anchor-id="prepare-the-install-config.yaml-file">Prepare the <code>install-config.yaml</code> file:</h2>
 <p>Adapt <code>baseDomain</code>, instance types, and <code>pullSecret</code> before use.</p>
 <div class="code-with-filename">
 <div class="code-with-filename-file">
 <pre><strong>ocp-install/install-config.yaml</strong></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" data-filename="ocp-install/install-config.yaml"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1"></a><span class="fu">apiVersion</span><span class="kw">:</span><span class="at"> v1</span></span>
-<span id="cb2-2"><a href="#cb2-2"></a><span class="fu">baseDomain</span><span class="kw">:</span><span class="at"> rhoai.rh-aiservices.com</span></span>
-<span id="cb2-3"><a href="#cb2-3"></a><span class="fu">compute</span><span class="kw">:</span></span>
-<span id="cb2-4"><a href="#cb2-4"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">architecture</span><span class="kw">:</span><span class="at"> amd64</span></span>
-<span id="cb2-5"><a href="#cb2-5"></a><span class="at">    </span><span class="fu">hyperthreading</span><span class="kw">:</span><span class="at"> Enabled</span></span>
-<span id="cb2-6"><a href="#cb2-6"></a><span class="at">    </span><span class="fu">name</span><span class="kw">:</span><span class="at"> worker</span></span>
-<span id="cb2-7"><a href="#cb2-7"></a><span class="at">    </span><span class="fu">platform</span><span class="kw">:</span></span>
-<span id="cb2-8"><a href="#cb2-8"></a><span class="at">      </span><span class="fu">aws</span><span class="kw">:</span></span>
-<span id="cb2-9"><a href="#cb2-9"></a><span class="at">        </span><span class="fu">type</span><span class="kw">:</span><span class="at"> m6i.4xlarge</span></span>
-<span id="cb2-10"><a href="#cb2-10"></a><span class="at">    </span><span class="fu">replicas</span><span class="kw">:</span><span class="at"> </span><span class="dv">0</span></span>
-<span id="cb2-11"><a href="#cb2-11"></a><span class="fu">controlPlane</span><span class="kw">:</span></span>
-<span id="cb2-12"><a href="#cb2-12"></a><span class="at">  </span><span class="fu">architecture</span><span class="kw">:</span><span class="at"> amd64</span></span>
-<span id="cb2-13"><a href="#cb2-13"></a><span class="at">  </span><span class="fu">hyperthreading</span><span class="kw">:</span><span class="at"> Enabled</span></span>
-<span id="cb2-14"><a href="#cb2-14"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> master</span></span>
-<span id="cb2-15"><a href="#cb2-15"></a><span class="at">  </span><span class="fu">platform</span><span class="kw">:</span></span>
-<span id="cb2-16"><a href="#cb2-16"></a><span class="at">    </span><span class="fu">aws</span><span class="kw">:</span></span>
-<span id="cb2-17"><a href="#cb2-17"></a><span class="at">      </span><span class="fu">type</span><span class="kw">:</span><span class="at"> g6.12xlarge</span></span>
-<span id="cb2-18"><a href="#cb2-18"></a><span class="at">      </span><span class="fu">rootVolume</span><span class="kw">:</span></span>
-<span id="cb2-19"><a href="#cb2-19"></a><span class="at">        </span><span class="fu">size</span><span class="kw">:</span><span class="at"> </span><span class="dv">1000</span></span>
-<span id="cb2-20"><a href="#cb2-20"></a><span class="at">  </span><span class="fu">replicas</span><span class="kw">:</span><span class="at"> </span><span class="dv">1</span></span>
-<span id="cb2-21"><a href="#cb2-21"></a><span class="fu">metadata</span><span class="kw">:</span></span>
-<span id="cb2-22"><a href="#cb2-22"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> rhoai-demo</span></span>
-<span id="cb2-23"><a href="#cb2-23"></a><span class="fu">networking</span><span class="kw">:</span></span>
-<span id="cb2-24"><a href="#cb2-24"></a><span class="at">  </span><span class="fu">clusterNetwork</span><span class="kw">:</span></span>
-<span id="cb2-25"><a href="#cb2-25"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">cidr</span><span class="kw">:</span><span class="at"> 10.128.0.0/14</span></span>
-<span id="cb2-26"><a href="#cb2-26"></a><span class="at">      </span><span class="fu">hostPrefix</span><span class="kw">:</span><span class="at"> </span><span class="dv">23</span></span>
-<span id="cb2-27"><a href="#cb2-27"></a><span class="at">  </span><span class="fu">machineNetwork</span><span class="kw">:</span></span>
-<span id="cb2-28"><a href="#cb2-28"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">cidr</span><span class="kw">:</span><span class="at"> 10.0.0.0/16</span></span>
-<span id="cb2-29"><a href="#cb2-29"></a><span class="at">  </span><span class="fu">networkType</span><span class="kw">:</span><span class="at"> OVNKubernetes</span></span>
-<span id="cb2-30"><a href="#cb2-30"></a><span class="at">  </span><span class="fu">serviceNetwork</span><span class="kw">:</span></span>
-<span id="cb2-31"><a href="#cb2-31"></a><span class="at">    </span><span class="kw">-</span><span class="at"> 172.30.0.0/16</span></span>
-<span id="cb2-32"><a href="#cb2-32"></a><span class="fu">platform</span><span class="kw">:</span></span>
-<span id="cb2-33"><a href="#cb2-33"></a><span class="at">  </span><span class="fu">aws</span><span class="kw">:</span></span>
-<span id="cb2-34"><a href="#cb2-34"></a><span class="at">    </span><span class="fu">region</span><span class="kw">:</span><span class="at"> eu-west-3</span></span>
-<span id="cb2-35"><a href="#cb2-35"></a><span class="fu">publish</span><span class="kw">:</span><span class="at"> External</span></span>
-<span id="cb2-36"><a href="#cb2-36"></a><span class="fu">pullSecret</span><span class="kw">:</span><span class="at"> </span><span class="st">'{"auths":{"cloud.openshift.com":{"auth":"&lt;token&gt;","email":"&lt;email&gt;"}}}'</span></span>
-<span id="cb2-37"><a href="#cb2-37"></a><span class="fu">sshKey</span><span class="kw">:</span><span class="at"> </span><span class="st">'ssh-ed25519 AAAA...redacted...'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10" data-filename="ocp-install/install-config.yaml"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb10-1"><a href="#cb10-1"></a><span class="fu">apiVersion</span><span class="kw">:</span><span class="at"> v1</span></span>
+<span id="cb10-2"><a href="#cb10-2"></a><span class="fu">baseDomain</span><span class="kw">:</span><span class="at"> belowthestack.dev</span></span>
+<span id="cb10-3"><a href="#cb10-3"></a><span class="fu">compute</span><span class="kw">:</span></span>
+<span id="cb10-4"><a href="#cb10-4"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">architecture</span><span class="kw">:</span><span class="at"> amd64</span></span>
+<span id="cb10-5"><a href="#cb10-5"></a><span class="at">    </span><span class="fu">hyperthreading</span><span class="kw">:</span><span class="at"> Enabled</span></span>
+<span id="cb10-6"><a href="#cb10-6"></a><span class="at">    </span><span class="fu">name</span><span class="kw">:</span><span class="at"> worker</span></span>
+<span id="cb10-7"><a href="#cb10-7"></a><span class="at">    </span><span class="fu">platform</span><span class="kw">:</span></span>
+<span id="cb10-8"><a href="#cb10-8"></a><span class="at">      </span><span class="fu">aws</span><span class="kw">:</span></span>
+<span id="cb10-9"><a href="#cb10-9"></a><span class="at">        </span><span class="fu">type</span><span class="kw">:</span><span class="at"> m6i.4xlarge</span></span>
+<span id="cb10-10"><a href="#cb10-10"></a><span class="at">    </span><span class="fu">replicas</span><span class="kw">:</span><span class="at"> </span><span class="dv">0</span></span>
+<span id="cb10-11"><a href="#cb10-11"></a><span class="fu">controlPlane</span><span class="kw">:</span></span>
+<span id="cb10-12"><a href="#cb10-12"></a><span class="at">  </span><span class="fu">architecture</span><span class="kw">:</span><span class="at"> amd64</span></span>
+<span id="cb10-13"><a href="#cb10-13"></a><span class="at">  </span><span class="fu">hyperthreading</span><span class="kw">:</span><span class="at"> Enabled</span></span>
+<span id="cb10-14"><a href="#cb10-14"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> master</span></span>
+<span id="cb10-15"><a href="#cb10-15"></a><span class="at">  </span><span class="fu">platform</span><span class="kw">:</span></span>
+<span id="cb10-16"><a href="#cb10-16"></a><span class="at">    </span><span class="fu">aws</span><span class="kw">:</span></span>
+<span id="cb10-17"><a href="#cb10-17"></a><span class="at">      </span><span class="fu">type</span><span class="kw">:</span><span class="at"> g6.12xlarge</span></span>
+<span id="cb10-18"><a href="#cb10-18"></a><span class="at">      </span><span class="fu">rootVolume</span><span class="kw">:</span></span>
+<span id="cb10-19"><a href="#cb10-19"></a><span class="at">        </span><span class="fu">size</span><span class="kw">:</span><span class="at"> </span><span class="dv">1000</span></span>
+<span id="cb10-20"><a href="#cb10-20"></a><span class="at">  </span><span class="fu">replicas</span><span class="kw">:</span><span class="at"> </span><span class="dv">1</span></span>
+<span id="cb10-21"><a href="#cb10-21"></a><span class="fu">metadata</span><span class="kw">:</span></span>
+<span id="cb10-22"><a href="#cb10-22"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> rhoai-demo</span></span>
+<span id="cb10-23"><a href="#cb10-23"></a><span class="fu">networking</span><span class="kw">:</span></span>
+<span id="cb10-24"><a href="#cb10-24"></a><span class="at">  </span><span class="fu">clusterNetwork</span><span class="kw">:</span></span>
+<span id="cb10-25"><a href="#cb10-25"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">cidr</span><span class="kw">:</span><span class="at"> 10.128.0.0/14</span></span>
+<span id="cb10-26"><a href="#cb10-26"></a><span class="at">      </span><span class="fu">hostPrefix</span><span class="kw">:</span><span class="at"> </span><span class="dv">23</span></span>
+<span id="cb10-27"><a href="#cb10-27"></a><span class="at">  </span><span class="fu">machineNetwork</span><span class="kw">:</span></span>
+<span id="cb10-28"><a href="#cb10-28"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">cidr</span><span class="kw">:</span><span class="at"> 10.0.0.0/16</span></span>
+<span id="cb10-29"><a href="#cb10-29"></a><span class="at">  </span><span class="fu">networkType</span><span class="kw">:</span><span class="at"> OVNKubernetes</span></span>
+<span id="cb10-30"><a href="#cb10-30"></a><span class="at">  </span><span class="fu">serviceNetwork</span><span class="kw">:</span></span>
+<span id="cb10-31"><a href="#cb10-31"></a><span class="at">    </span><span class="kw">-</span><span class="at"> 172.30.0.0/16</span></span>
+<span id="cb10-32"><a href="#cb10-32"></a><span class="fu">platform</span><span class="kw">:</span></span>
+<span id="cb10-33"><a href="#cb10-33"></a><span class="at">  </span><span class="fu">aws</span><span class="kw">:</span></span>
+<span id="cb10-34"><a href="#cb10-34"></a><span class="at">    </span><span class="fu">region</span><span class="kw">:</span><span class="at"> eu-west-3</span></span>
+<span id="cb10-35"><a href="#cb10-35"></a><span class="fu">publish</span><span class="kw">:</span><span class="at"> External</span></span>
+<span id="cb10-36"><a href="#cb10-36"></a><span class="fu">pullSecret</span><span class="kw">:</span><span class="at"> </span><span class="st">'{"auths":{"cloud.openshift.com":{"auth":"&lt;token&gt;","email":"&lt;email&gt;"}}}'</span></span>
+<span id="cb10-37"><a href="#cb10-37"></a><span class="fu">sshKey</span><span class="kw">:</span><span class="at"> </span><span class="st">'ssh-ed25519 AAAA...redacted...'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="callout callout-style-default callout-warning callout-titled">
 <div class="callout-header d-flex align-content-center">

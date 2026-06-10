@@ -1,17 +1,66 @@
 [
   {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "Technical Deep Dives & Product Explorations",
+    "objectID": "posts/ocp-install/index.html",
+    "href": "posts/ocp-install/index.html",
+    "title": "Installing OpenShift on AWS: a repeatable script & walkthrough",
     "section": "",
-    "text": "This site hosts long-form, practical analyses of cloud platforms, distributed systems, and developer tooling — focused on architecture, trade-offs, and real-world fit.\n\nRead the blog About me"
+    "text": "TL;DR — Save the shell script below, edit OCP_VERSION and your install-config.yaml, then run openshift-install create cluster --dir ocp-install. The full annotated walkthrough is below.\nThis post documents a compact, repeatable shell-based workflow used to install OpenShift 4.x on AWS. I extracted the working script, annotated each step, and included a sample install-config.yaml for a minimal IPI installation."
   },
   {
-    "objectID": "index.html#latest-posts",
-    "href": "index.html#latest-posts",
-    "title": "Technical Deep Dives & Product Explorations",
-    "section": "Latest posts",
-    "text": "Latest posts\n\n\n\n\n\n\n\n\n\n\nInstalling OpenShift on AWS: a repeatable script & walkthrough\n\n4 min\n\n\nopenshift\n\ncloud\n\naws\n\ndevops\n\nkubernetes\n\n\n\nA compact, annotated shell workflow to install OpenShift 4.x on AWS — with a ready-to-edit install-config.yaml, sensible defaults, and the trade-offs you should know before…\n\n\n\nJun 10, 2026\n\n\n\n\n\n\nNo matching items\n\n\nBrowse all posts →"
+    "objectID": "posts/ocp-install/index.html#why-this-matters",
+    "href": "posts/ocp-install/index.html#why-this-matters",
+    "title": "Installing OpenShift on AWS: a repeatable script & walkthrough",
+    "section": "Why this matters",
+    "text": "Why this matters\n\nRepeatable installs are the difference between a cluster you understand and one you merely possess.\n\n\nRepeatability — encapsulates download, install, and bootstrap steps.\nAuditability — the full script appears below so you can review before running.\nTunable — variables like OCP_VERSION and ARCH are exposed for quick edits.\n\n\n\n\n\n\n\nFigure 1: High-level installation flow."
+  },
+  {
+    "objectID": "posts/ocp-install/index.html#aws-prerequisites-at-a-glance",
+    "href": "posts/ocp-install/index.html#aws-prerequisites-at-a-glance",
+    "title": "Installing OpenShift on AWS: a repeatable script & walkthrough",
+    "section": "AWS prerequisites — at a glance",
+    "text": "AWS prerequisites — at a glance\nBefore you run the installer, you need an EC2 host to drive the install and a public Route 53 hosted zone matching your baseDomain.\n\n\n\n\n\n\n\n\n\nFigure 2: Create the installer EC2 host.\n\n\n\n\n\n\n\n\n\n\n\nFigure 3: Create the public Route 53 hosted zone.\n\n\n\n\n\n\nBoth screenshots show the minimum configuration that satisfies the OpenShift installer’s IAM and DNS expectations.\n\n\n\n\n\n\nTipPick a specific version\n\n\n\nAvoid latest-4.22 for production runs — pin to a release like 4.22.3 so the install is reproducible months later when latest has moved on."
+  },
+  {
+    "objectID": "posts/ocp-install/index.html#prerequisites",
+    "href": "posts/ocp-install/index.html#prerequisites",
+    "title": "Installing OpenShift on AWS: a repeatable script & walkthrough",
+    "section": "Prerequisites",
+    "text": "Prerequisites\n\nA Linux host with curl, tar, and ssh available.\nIAM permissions matching the OpenShift required AWS permissions.\nA valid OpenShift pull secret and an SSH key."
+  },
+  {
+    "objectID": "posts/ocp-install/index.html#the-script-annotated",
+    "href": "posts/ocp-install/index.html#the-script-annotated",
+    "title": "Installing OpenShift on AWS: a repeatable script & walkthrough",
+    "section": "The script (annotated)",
+    "text": "The script (annotated)\nRather than dropping the full ocp-install.sh here as one block, this section walks through the script one command group at a time so you can copy, adapt, and run each step independently.\n\n\n\n\n\n\nThe whole file is also available as a single download: ocp-install.sh. The sections below correspond 1:1 to the blocks inside it.\n\n\n\n\n1. Patch the host\nA predictable starting state. Run a full package update so the build host isn’t carrying half-applied kernel or curl patches when the installer hits the network.\nsudo yum update -y\n\n\n2. Working directory and pinned versions\nEverything below assumes a dedicated tools/ directory and three exported variables. Pinning OCP_VERSION to a specific release (not latest-*) is what makes the install reproducible weeks later.\nmkdir -p tools && cd tools/\n\nexport OCP_VERSION=\"latest-4.22\"   # pin to e.g. 4.22.3 for production\nexport ARCH=\"x86_64\"\nexport HOST_ARCH=\"$(uname -m)\"\n\n\n3. Install the oc and kubectl clients\nDownload the client tarball from the Red Hat mirror, extract the two binaries, and move them onto PATH. The -fsSL flags make curl fail loudly on HTTP errors instead of silently writing an HTML error page into oc.tar.gz.\ncurl -fsSLk \\\n  \"https://mirror.openshift.com/pub/openshift-v4/${HOST_ARCH}/clients/ocp/${OCP_VERSION}/openshift-client-linux.tar.gz\" \\\n  -o oc.tar.gz\n\ntar zxf oc.tar.gz\nrm -f oc.tar.gz README.md\nchmod +x oc kubectl\nsudo mv oc kubectl /usr/local/bin/\nVerify before moving on:\noc version --client\nkubectl version --client\n\n\n4. Install the openshift-install binary\nSame pattern, different tarball. This is the installer that orchestrates the bootstrap node, control plane, and AWS resources.\ncurl -fsSLk \\\n  \"https://mirror.openshift.com/pub/openshift-v4/${HOST_ARCH}/clients/ocp/${OCP_VERSION}/openshift-install-linux.tar.gz\" \\\n  -o openshift-install-linux.tar.gz\n\ntar zxf openshift-install-linux.tar.gz\nrm -f openshift-install-linux.tar.gz README.md\nchmod +x openshift-install\nsudo mv openshift-install /usr/local/bin/\nVerify the version matches OCP_VERSION:\nopenshift-install version\n\n\n5. Generate the cluster SSH key\nThe installer bakes this public key into every node so you can ssh core@… later for diagnostics. Use a dedicated key per cluster — don’t reuse your personal one.\nssh-keygen -t ed25519 -N '' -f ~/.ssh/rhoai-demo\neval \"$(ssh-agent -s)\"\nssh-add ~/.ssh/rhoai-demo\n\n\n\n\n\n\n~/.ssh/rhoai-demo is a private key. Add it to .gitignore and never copy it into a container image or CI artifact.\n\n\n\n\n\n6. Launch the install\nDrop the install-config.yaml from the next section into ./ocp-install/, then hand control over to the installer. The --dir flag is what makes re-runs, gather, and destroy work consistently against the same state.\nmkdir -p ocp-install\n# Place install-config.yaml inside ./ocp-install/ first, then:\nopenshift-install create cluster --dir ocp-install --log-level=info\nExpect 30–45 minutes for an AWS IPI install. Watch progress with:\ntail -f ocp-install/.openshift_install.log"
+  },
+  {
+    "objectID": "posts/ocp-install/index.html#prepare-the-install-config.yaml-file",
+    "href": "posts/ocp-install/index.html#prepare-the-install-config.yaml-file",
+    "title": "Installing OpenShift on AWS: a repeatable script & walkthrough",
+    "section": "Prepare the install-config.yaml file:",
+    "text": "Prepare the install-config.yaml file:\nAdapt baseDomain, instance types, and pullSecret before use.\n\n\nocp-install/install-config.yaml\n\napiVersion: v1\nbaseDomain: belowthestack.dev\ncompute:\n  - architecture: amd64\n    hyperthreading: Enabled\n    name: worker\n    platform:\n      aws:\n        type: m6i.4xlarge\n    replicas: 0\ncontrolPlane:\n  architecture: amd64\n  hyperthreading: Enabled\n  name: master\n  platform:\n    aws:\n      type: g6.12xlarge\n      rootVolume:\n        size: 1000\n  replicas: 1\nmetadata:\n  name: rhoai-demo\nnetworking:\n  clusterNetwork:\n    - cidr: 10.128.0.0/14\n      hostPrefix: 23\n  machineNetwork:\n    - cidr: 10.0.0.0/16\n  networkType: OVNKubernetes\n  serviceNetwork:\n    - 172.30.0.0/16\nplatform:\n  aws:\n    region: eu-west-3\npublish: External\npullSecret: '{\"auths\":{\"cloud.openshift.com\":{\"auth\":\"&lt;token&gt;\",\"email\":\"&lt;email&gt;\"}}}'\nsshKey: 'ssh-ed25519 AAAA...redacted...'\n\n\n\n\n\n\n\nWarningNever commit secrets\n\n\n\npullSecret and the contents of ~/.ssh/rhoai-demo are credentials. Add install-config.yaml, *.pem, and auth/ to your .gitignore before running the installer — the installer mutates this file and writes auth/kubeadmin-password and auth/kubeconfig next to it."
+  },
+  {
+    "objectID": "posts/ocp-install/index.html#important-notes-best-practices",
+    "href": "posts/ocp-install/index.html#important-notes-best-practices",
+    "title": "Installing OpenShift on AWS: a repeatable script & walkthrough",
+    "section": "Important notes & best practices",
+    "text": "Important notes & best practices\n\nReplace OCP_VERSION with a specific release for reproducible runs.\nAlways pass --dir so re-running and gather commands work consistently.\nRun downloads from a bastion with stable network connectivity.\nThe single-master controlPlane.replicas: 1 above is a lab topology — production needs three.\n\n\n\n\n\n\n\nImportantSingle-node OpenShift ≠ Production HA\n\n\n\nA controlPlane.replicas: 1 install is fine for a demo cluster but should never carry workloads you can’t lose. For HA, use three control-plane nodes and at least two workers across availability zones."
+  },
+  {
+    "objectID": "posts/ocp-install/index.html#troubleshooting",
+    "href": "posts/ocp-install/index.html#troubleshooting",
+    "title": "Installing OpenShift on AWS: a repeatable script & walkthrough",
+    "section": "Troubleshooting",
+    "text": "Troubleshooting\n\n\n\nTable 1: Common failure modes and where to look.\n\n\n\n\n\n\n\n\n\nSymptom\nFirst thing to check\n\n\n\n\nInstaller hangs on bootstrap\nopenshift-install gather bootstrap --dir ocp-install\n\n\nmv fails moving binaries\nRe-run the mv lines with sudo\n\n\nAWS API quota errors\nVerify the EC2/EBS quotas in your target region\n\n\nDNS resolution fails post-install\nVerify Route 53 NS records match the hosted zone"
+  },
+  {
+    "objectID": "posts/ocp-install/index.html#wrap-up",
+    "href": "posts/ocp-install/index.html#wrap-up",
+    "title": "Installing OpenShift on AWS: a repeatable script & walkthrough",
+    "section": "Wrap-up",
+    "text": "Wrap-up\nIf you treat the script in this post as a starting point rather than a black box — pin versions, audit IAM, and review the install-config.yaml before each run — you’ll get a reproducible OpenShift install you actually understand.\n\n\n\n\n\n\nFound a sharp edge? Open an issue at josephassiga/josephassiga.github.io — I keep this post updated as the installer evolves."
   },
   {
     "objectID": "about.html",
@@ -42,80 +91,24 @@
     "text": "Connect\nFind me on the links above. If you’d like to collaborate or share feedback, reach out on Twitter or GitHub."
   },
   {
-    "objectID": "posts/ocp-install/index.html",
-    "href": "posts/ocp-install/index.html",
-    "title": "Installing OpenShift on AWS: a repeatable script & walkthrough",
-    "section": "",
-    "text": "TL;DR — Save the shell script below, edit OCP_VERSION and your install-config.yaml, then run openshift-install create cluster --dir ocp-install. The full annotated walkthrough is below.\nThis post documents a compact, repeatable shell-based workflow used to install OpenShift 4.x on AWS. I extracted the working script, annotated each step, and included a sample install-config.yaml for a minimal IPI installation."
-  },
-  {
-    "objectID": "posts/ocp-install/index.html#why-this-matters",
-    "href": "posts/ocp-install/index.html#why-this-matters",
-    "title": "Installing OpenShift on AWS: a repeatable script & walkthrough",
-    "section": "Why this matters",
-    "text": "Why this matters\n\nRepeatable installs are the difference between a cluster you understand and one you merely possess.\n\n\nRepeatability — encapsulates download, install, and bootstrap steps.\nAuditability — the full script appears below so you can review before running.\nTunable — variables like OCP_VERSION and ARCH are exposed for quick edits.\n\n\n\n\n\n\n\nFigure 1: High-level installation flow."
-  },
-  {
-    "objectID": "posts/ocp-install/index.html#aws-prerequisites-at-a-glance",
-    "href": "posts/ocp-install/index.html#aws-prerequisites-at-a-glance",
-    "title": "Installing OpenShift on AWS: a repeatable script & walkthrough",
-    "section": "AWS prerequisites — at a glance",
-    "text": "AWS prerequisites — at a glance\nBefore you run the installer, you need an EC2 host to drive the install and a public Route 53 hosted zone matching your baseDomain.\n\n\n\n\n\n\n\n\n\nFigure 2: Create the installer EC2 host.\n\n\n\n\n\n\n\n\n\n\n\nFigure 3: Create the public Route 53 hosted zone.\n\n\n\n\n\n\nBoth screenshots show the minimum configuration that satisfies the OpenShift installer’s IAM and DNS expectations.\n\n\n\n\n\n\nTipPick a specific version\n\n\n\nAvoid latest-4.22 for production runs — pin to a release like 4.22.3 so the install is reproducible months later when latest has moved on."
-  },
-  {
-    "objectID": "posts/ocp-install/index.html#prerequisites",
-    "href": "posts/ocp-install/index.html#prerequisites",
-    "title": "Installing OpenShift on AWS: a repeatable script & walkthrough",
-    "section": "Prerequisites",
-    "text": "Prerequisites\n\nA Linux host with curl, tar, and ssh available.\nIAM permissions matching the OpenShift required AWS permissions.\nA valid OpenShift pull secret and an SSH key."
-  },
-  {
-    "objectID": "posts/ocp-install/index.html#how-the-install-script-works",
-    "href": "posts/ocp-install/index.html#how-the-install-script-works",
-    "title": "Installing OpenShift on AWS: a repeatable script & walkthrough",
-    "section": "How the install script works",
-    "text": "How the install script works\n\n\n\n\n\nflowchart TD\n  A[Start] --&gt; B[Create tools dir]\n  B --&gt; C[Set env vars]\n  C --&gt; D[Download oc client]\n  D --&gt; E[Install oc & kubectl]\n  E --&gt; F[Download openshift-install]\n  F --&gt; G[Install openshift-install binary]\n  G --&gt; H[Generate SSH key & add to agent]\n  H --&gt; I[Write install-config.yaml]\n  I --&gt; J[Run openshift-install create cluster]\n  J --&gt; K[Wait for cluster readiness]\n  K --&gt; L[Done]"
-  },
-  {
-    "objectID": "posts/ocp-install/index.html#the-script-annotated",
-    "href": "posts/ocp-install/index.html#the-script-annotated",
-    "title": "Installing OpenShift on AWS: a repeatable script & walkthrough",
-    "section": "The script (annotated)",
-    "text": "The script (annotated)\nRead it carefully and adapt the variables to your environment before running.\n\n\nocp-install.sh\n\n#!/usr/bin/env bash\nset -euo pipefail\n\nyum update -y\n\nmkdir -p tools && cd tools/\n\n# Pin a specific minor for reproducibility.\nexport OCP_VERSION=\"latest-4.22\"\nexport ARCH=\"x86_64\"\nexport HOST_ARCH=\"$(uname -m)\"\n\n# --- oc / kubectl ---\ncurl -fsSLk \\\n  \"https://mirror.openshift.com/pub/openshift-v4/${HOST_ARCH}/clients/ocp/${OCP_VERSION}/openshift-client-linux.tar.gz\" \\\n  -o oc.tar.gz\ntar zxf oc.tar.gz\nrm -f oc.tar.gz README.md\nchmod +x oc kubectl\nsudo mv oc kubectl /usr/local/bin/\n\n# --- openshift-install ---\ncurl -fsSLk \\\n  \"https://mirror.openshift.com/pub/openshift-v4/${HOST_ARCH}/clients/ocp/${OCP_VERSION}/openshift-install-linux.tar.gz\" \\\n  -o openshift-install-linux.tar.gz\ntar zxf openshift-install-linux.tar.gz\nrm -f openshift-install-linux.tar.gz README.md\nchmod +x openshift-install\nsudo mv openshift-install /usr/local/bin/\n\n# --- SSH key for cluster nodes ---\nssh-keygen -t ed25519 -N '' -f ~/.ssh/rhoai-demo\neval \"$(ssh-agent -s)\"\nssh-add ~/.ssh/rhoai-demo\n\n# --- Launch the install ---\nmkdir -p ocp-install\n# put install-config.yaml in ./ocp-install first, then:\nopenshift-install create cluster --dir ocp-install --log-level=info"
-  },
-  {
-    "objectID": "posts/ocp-install/index.html#example-install-config.yaml",
-    "href": "posts/ocp-install/index.html#example-install-config.yaml",
-    "title": "Installing OpenShift on AWS: a repeatable script & walkthrough",
-    "section": "Example install-config.yaml",
-    "text": "Example install-config.yaml\nAdapt baseDomain, instance types, and pullSecret before use.\n\n\nocp-install/install-config.yaml\n\napiVersion: v1\nbaseDomain: rhoai.rh-aiservices.com\ncompute:\n  - architecture: amd64\n    hyperthreading: Enabled\n    name: worker\n    platform:\n      aws:\n        type: m6i.4xlarge\n    replicas: 0\ncontrolPlane:\n  architecture: amd64\n  hyperthreading: Enabled\n  name: master\n  platform:\n    aws:\n      type: g6.12xlarge\n      rootVolume:\n        size: 1000\n  replicas: 1\nmetadata:\n  name: rhoai-demo\nnetworking:\n  clusterNetwork:\n    - cidr: 10.128.0.0/14\n      hostPrefix: 23\n  machineNetwork:\n    - cidr: 10.0.0.0/16\n  networkType: OVNKubernetes\n  serviceNetwork:\n    - 172.30.0.0/16\nplatform:\n  aws:\n    region: eu-west-3\npublish: External\npullSecret: '{\"auths\":{\"cloud.openshift.com\":{\"auth\":\"&lt;token&gt;\",\"email\":\"&lt;email&gt;\"}}}'\nsshKey: 'ssh-ed25519 AAAA...redacted...'\n\n\n\n\n\n\n\nWarningNever commit secrets\n\n\n\npullSecret and the contents of ~/.ssh/rhoai-demo are credentials. Add install-config.yaml, *.pem, and auth/ to your .gitignore before running the installer — the installer mutates this file and writes auth/kubeadmin-password and auth/kubeconfig next to it."
-  },
-  {
-    "objectID": "posts/ocp-install/index.html#important-notes-best-practices",
-    "href": "posts/ocp-install/index.html#important-notes-best-practices",
-    "title": "Installing OpenShift on AWS: a repeatable script & walkthrough",
-    "section": "Important notes & best practices",
-    "text": "Important notes & best practices\n\nReplace OCP_VERSION with a specific release for reproducible runs.\nAlways pass --dir so re-running and gather commands work consistently.\nRun downloads from a bastion with stable network connectivity.\nThe single-master controlPlane.replicas: 1 above is a lab topology — production needs three.\n\n\n\n\n\n\n\nImportantSingle-node OpenShift ≠ Production HA\n\n\n\nA controlPlane.replicas: 1 install is fine for a demo cluster but should never carry workloads you can’t lose. For HA, use three control-plane nodes and at least two workers across availability zones."
-  },
-  {
-    "objectID": "posts/ocp-install/index.html#troubleshooting",
-    "href": "posts/ocp-install/index.html#troubleshooting",
-    "title": "Installing OpenShift on AWS: a repeatable script & walkthrough",
-    "section": "Troubleshooting",
-    "text": "Troubleshooting\n\n\n\nTable 1: Common failure modes and where to look.\n\n\n\n\n\n\n\n\n\nSymptom\nFirst thing to check\n\n\n\n\nInstaller hangs on bootstrap\nopenshift-install gather bootstrap --dir ocp-install\n\n\nmv fails moving binaries\nRe-run the mv lines with sudo\n\n\nAWS API quota errors\nVerify the EC2/EBS quotas in your target region\n\n\nDNS resolution fails post-install\nVerify Route 53 NS records match the hosted zone"
-  },
-  {
-    "objectID": "posts/ocp-install/index.html#wrap-up",
-    "href": "posts/ocp-install/index.html#wrap-up",
-    "title": "Installing OpenShift on AWS: a repeatable script & walkthrough",
-    "section": "Wrap-up",
-    "text": "Wrap-up\nIf you treat the script in this post as a starting point rather than a black box — pin versions, audit IAM, and review the install-config.yaml before each run — you’ll get a reproducible OpenShift install you actually understand.\n\n\n\n\n\n\nFound a sharp edge? Open an issue at josephassiga/josephassiga.github.io — I keep this post updated as the installer evolves."
-  },
-  {
     "objectID": "blog.html",
     "href": "blog.html",
     "title": "Blog",
     "section": "",
-    "text": "Order By\n      Default\n      \n        Date - Oldest\n      \n      \n        Date - Newest\n      \n      \n        Title\n      \n    \n  \n    \n      \n      \n    \n\n\n\n\n\n\n\n\n\n\nInstalling OpenShift on AWS: a repeatable script & walkthrough\n\n4 min\n\n\nopenshift\n\ncloud\n\naws\n\ndevops\n\nkubernetes\n\n\n\nA compact, annotated shell workflow to install OpenShift 4.x on AWS — with a ready-to-edit install-config.yaml, sensible defaults, and the trade-offs you should know before…\n\n\n\nJun 10, 2026\n\n\n\n\n\n\nNo matching items"
+    "text": "Order By\n      Default\n      \n        Date - Oldest\n      \n      \n        Date - Newest\n      \n      \n        Title\n      \n    \n  \n    \n      \n      \n    \n\n\n\n\n\n\n\n\n\n\nInstalling OpenShift on AWS: a repeatable script & walkthrough\n\n5 min\n\n\nopenshift\n\ncloud\n\naws\n\ndevops\n\nkubernetes\n\n\n\nA compact, annotated shell workflow to install OpenShift 4.x on AWS — with a ready-to-edit install-config.yaml, sensible defaults, and the trade-offs you should know before…\n\n\n\nJun 10, 2026\n\n\n\n\n\n\nNo matching items"
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Technical Deep Dives & Product Explorations",
+    "section": "",
+    "text": "This site hosts long-form, practical analyses of cloud platforms, distributed systems, and developer tooling — focused on architecture, trade-offs, and real-world fit.\n\nRead the blog About me"
+  },
+  {
+    "objectID": "index.html#latest-posts",
+    "href": "index.html#latest-posts",
+    "title": "Technical Deep Dives & Product Explorations",
+    "section": "Latest posts",
+    "text": "Latest posts\n\n\n\n\n\n\n\n\n\n\nInstalling OpenShift on AWS: a repeatable script & walkthrough\n\n5 min\n\n\nopenshift\n\ncloud\n\naws\n\ndevops\n\nkubernetes\n\n\n\nA compact, annotated shell workflow to install OpenShift 4.x on AWS — with a ready-to-edit install-config.yaml, sensible defaults, and the trade-offs you should know before…\n\n\n\nJun 10, 2026\n\n\n\n\n\n\nNo matching items\n\n\nBrowse all posts →"
   }
 ]

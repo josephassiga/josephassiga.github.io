@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://josephassiga.github.io/index.html</loc>
-    <lastmod>2026-06-10T21:44:02.122Z</lastmod>
+    <loc>https://josephassiga.github.io/posts/ocp-install/index.html</loc>
+    <lastmod>2026-06-10T21:54:34.323Z</lastmod>
   </url>
   <url>
     <loc>https://josephassiga.github.io/about.html</loc>
-    <lastmod>2026-06-10T21:44:02.120Z</lastmod>
-  </url>
-  <url>
-    <loc>https://josephassiga.github.io/posts/ocp-install/index.html</loc>
-    <lastmod>2026-06-10T21:44:02.123Z</lastmod>
+    <lastmod>2026-06-10T21:54:34.321Z</lastmod>
   </url>
   <url>
     <loc>https://josephassiga.github.io/blog.html</loc>
-    <lastmod>2026-06-10T21:44:02.120Z</lastmod>
+    <lastmod>2026-06-10T21:54:34.321Z</lastmod>
+  </url>
+  <url>
+    <loc>https://josephassiga.github.io/index.html</loc>
+    <lastmod>2026-06-10T21:54:34.322Z</lastmod>
   </url>
 </urlset>

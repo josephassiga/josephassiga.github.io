@@ -107,55 +107,32 @@ Figure&nbsp;3: Create the public Route 53 hosted zone.
 <li>A valid OpenShift pull secret and an SSH key.</li>
 </ul>
 </section>
-<section id="how-the-install-script-works" class="level2">
-<h2 class="anchored" data-anchor-id="how-the-install-script-works">How the install script works</h2>
-<div class="cell" data-layout-align="default">
-<div class="cell-output-display">
-<div>
-<p></p><figure class="figure"><p></p>
-<div>
-<pre class="mermaid mermaid-js">flowchart TD
-  A[Start] --&gt; B[Create tools dir]
-  B --&gt; C[Set env vars]
-  C --&gt; D[Download oc client]
-  D --&gt; E[Install oc &amp; kubectl]
-  E --&gt; F[Download openshift-install]
-  F --&gt; G[Install openshift-install binary]
-  G --&gt; H[Generate SSH key &amp; add to agent]
-  H --&gt; I[Write install-config.yaml]
-  I --&gt; J[Run openshift-install create cluster]
-  J --&gt; K[Wait for cluster readiness]
-  K --&gt; L[Done]
-</pre>
-</div>
-<p></p></figure><p></p>
-</div>
-</div>
-</div>
-</section>
 <section id="the-script-annotated" class="level2">
 <h2 class="anchored" data-anchor-id="the-script-annotated">The script (annotated)</h2>
-<p>Read it carefully and adapt the variables to your environment before running.</p>
-<div class="code-with-filename">
-<div class="code-with-filename-file">
-<pre><strong>ocp-install.sh</strong></pre>
+<p>Rather than dropping the full <code>ocp-install.sh</code> here as one block, this section walks through the script <strong>one command group at a time</strong> so you can copy, adapt, and run each step independently.</p>
+<div class="callout callout-style-simple callout-tip">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-filename="ocp-install.sh" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><span class="co" style="color: #5E5E5E;
+<div class="callout-body-container">
+<p>The whole file is also available as a single download: <a href="../../images/ocp-install.sh"><code>ocp-install.sh</code></a>. The sections below correspond 1:1 to the blocks inside it.</p>
+</div>
+</div>
+</div>
+<section id="patch-the-host" class="level3">
+<h3 class="anchored" data-anchor-id="patch-the-host">1. Patch the host</h3>
+<p>A predictable starting state. Run a full package update so the build host isn’t carrying half-applied kernel or <code>curl</code> patches when the installer hits the network.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><span class="fu" style="color: #4758AB;
 background-color: null;
-font-style: inherit;">#!/usr/bin/env bash</span></span>
-<span id="cb1-2"><span class="bu" style="color: null;
+font-style: inherit;">sudo</span> yum update <span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;">set</span> <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">-euo</span> pipefail</span>
-<span id="cb1-3"></span>
-<span id="cb1-4"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">yum</span> update <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">-y</span></span>
-<span id="cb1-5"></span>
-<span id="cb1-6"><span class="fu" style="color: #4758AB;
+font-style: inherit;">-y</span></span></code></pre></div></div>
+</section>
+<section id="working-directory-and-pinned-versions" class="level3">
+<h3 class="anchored" data-anchor-id="working-directory-and-pinned-versions">2. Working directory and pinned versions</h3>
+<p>Everything below assumes a dedicated <code>tools/</code> directory and three exported variables. Pinning <code>OCP_VERSION</code> to a specific release (not <code>latest-*</code>) is what makes the install reproducible weeks later.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">mkdir</span> <span class="at" style="color: #657422;
 background-color: null;
@@ -165,11 +142,8 @@ font-weight: bold;
 font-style: inherit;">&amp;&amp;</span> <span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">cd</span> tools/</span>
-<span id="cb1-7"></span>
-<span id="cb1-8"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># Pin a specific minor for reproducibility.</span></span>
-<span id="cb1-9"><span class="bu" style="color: null;
+<span id="cb2-2"></span>
+<span id="cb2-3"><span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">export</span> <span class="va" style="color: #111111;
 background-color: null;
@@ -177,8 +151,10 @@ font-style: inherit;">OCP_VERSION</span><span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span><span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"latest-4.22"</span></span>
-<span id="cb1-10"><span class="bu" style="color: null;
+font-style: inherit;">"latest-4.22"</span>   <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># pin to e.g. 4.22.3 for production</span></span>
+<span id="cb2-4"><span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">export</span> <span class="va" style="color: #111111;
 background-color: null;
@@ -187,7 +163,7 @@ background-color: null;
 font-style: inherit;">=</span><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"x86_64"</span></span>
-<span id="cb1-11"><span class="bu" style="color: null;
+<span id="cb2-5"><span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">export</span> <span class="va" style="color: #111111;
 background-color: null;
@@ -205,19 +181,19 @@ font-style: inherit;">-m</span><span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">)</span><span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"</span></span>
-<span id="cb1-12"></span>
-<span id="cb1-13"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># --- oc / kubectl ---</span></span>
-<span id="cb1-14"><span class="ex" style="color: null;
+font-style: inherit;">"</span></span></code></pre></div></div>
+</section>
+<section id="install-the-oc-and-kubectl-clients" class="level3">
+<h3 class="anchored" data-anchor-id="install-the-oc-and-kubectl-clients">3. Install the <code>oc</code> and <code>kubectl</code> clients</h3>
+<p>Download the client tarball from the Red Hat mirror, extract the two binaries, and move them onto <code>PATH</code>. The <code>-fsSL</code> flags make <code>curl</code> fail loudly on HTTP errors instead of silently writing an HTML error page into <code>oc.tar.gz</code>.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">curl</span> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">-fsSLk</span> <span class="dt" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">\</span></span>
-<span id="cb1-15">  <span class="st" style="color: #20794D;
+<span id="cb3-2">  <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"https://mirror.openshift.com/pub/openshift-v4/</span><span class="va" style="color: #111111;
 background-color: null;
@@ -230,35 +206,47 @@ background-color: null;
 font-style: inherit;">/openshift-client-linux.tar.gz"</span> <span class="dt" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">\</span></span>
-<span id="cb1-16">  <span class="at" style="color: #657422;
+<span id="cb3-3">  <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">-o</span> oc.tar.gz</span>
-<span id="cb1-17"><span class="fu" style="color: #4758AB;
+<span id="cb3-4"></span>
+<span id="cb3-5"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">tar</span> zxf oc.tar.gz</span>
-<span id="cb1-18"><span class="fu" style="color: #4758AB;
+<span id="cb3-6"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">rm</span> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">-f</span> oc.tar.gz README.md</span>
-<span id="cb1-19"><span class="fu" style="color: #4758AB;
+<span id="cb3-7"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">chmod</span> +x oc kubectl</span>
-<span id="cb1-20"><span class="fu" style="color: #4758AB;
+<span id="cb3-8"><span class="fu" style="color: #4758AB;
 background-color: null;
-font-style: inherit;">sudo</span> mv oc kubectl /usr/local/bin/</span>
-<span id="cb1-21"></span>
-<span id="cb1-22"><span class="co" style="color: #5E5E5E;
+font-style: inherit;">sudo</span> mv oc kubectl /usr/local/bin/</span></code></pre></div></div>
+<p>Verify before moving on:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><span class="ex" style="color: null;
 background-color: null;
-font-style: inherit;"># --- openshift-install ---</span></span>
-<span id="cb1-23"><span class="ex" style="color: null;
+font-style: inherit;">oc</span> version <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--client</span></span>
+<span id="cb4-2"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">kubectl</span> version <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--client</span></span></code></pre></div></div>
+</section>
+<section id="install-the-openshift-install-binary" class="level3">
+<h3 class="anchored" data-anchor-id="install-the-openshift-install-binary">4. Install the <code>openshift-install</code> binary</h3>
+<p>Same pattern, different tarball. This is the installer that orchestrates the bootstrap node, control plane, and AWS resources.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">curl</span> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">-fsSLk</span> <span class="dt" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">\</span></span>
-<span id="cb1-24">  <span class="st" style="color: #20794D;
+<span id="cb5-2">  <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"https://mirror.openshift.com/pub/openshift-v4/</span><span class="va" style="color: #111111;
 background-color: null;
@@ -271,28 +259,33 @@ background-color: null;
 font-style: inherit;">/openshift-install-linux.tar.gz"</span> <span class="dt" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">\</span></span>
-<span id="cb1-25">  <span class="at" style="color: #657422;
+<span id="cb5-3">  <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">-o</span> openshift-install-linux.tar.gz</span>
-<span id="cb1-26"><span class="fu" style="color: #4758AB;
+<span id="cb5-4"></span>
+<span id="cb5-5"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">tar</span> zxf openshift-install-linux.tar.gz</span>
-<span id="cb1-27"><span class="fu" style="color: #4758AB;
+<span id="cb5-6"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">rm</span> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">-f</span> openshift-install-linux.tar.gz README.md</span>
-<span id="cb1-28"><span class="fu" style="color: #4758AB;
+<span id="cb5-7"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">chmod</span> +x openshift-install</span>
-<span id="cb1-29"><span class="fu" style="color: #4758AB;
+<span id="cb5-8"><span class="fu" style="color: #4758AB;
 background-color: null;
-font-style: inherit;">sudo</span> mv openshift-install /usr/local/bin/</span>
-<span id="cb1-30"></span>
-<span id="cb1-31"><span class="co" style="color: #5E5E5E;
+font-style: inherit;">sudo</span> mv openshift-install /usr/local/bin/</span></code></pre></div></div>
+<p>Verify the version matches <code>OCP_VERSION</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><span class="ex" style="color: null;
 background-color: null;
-font-style: inherit;"># --- SSH key for cluster nodes ---</span></span>
-<span id="cb1-32"><span class="fu" style="color: #4758AB;
+font-style: inherit;">openshift-install</span> version</span></code></pre></div></div>
+</section>
+<section id="generate-the-cluster-ssh-key" class="level3">
+<h3 class="anchored" data-anchor-id="generate-the-cluster-ssh-key">5. Generate the cluster SSH key</h3>
+<p>The installer bakes this public key into every node so you can <code>ssh core@…</code> later for diagnostics. Use a dedicated key per cluster — don’t reuse your personal one.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">ssh-keygen</span> <span class="at" style="color: #657422;
 background-color: null;
@@ -303,7 +296,7 @@ background-color: null;
 font-style: inherit;">''</span> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">-f</span> ~/.ssh/rhoai-demo</span>
-<span id="cb1-33"><span class="bu" style="color: null;
+<span id="cb7-2"><span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">eval</span> <span class="st" style="color: #20794D;
 background-color: null;
@@ -318,22 +311,32 @@ background-color: null;
 font-style: inherit;">)</span><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"</span></span>
-<span id="cb1-34"><span class="fu" style="color: #4758AB;
+<span id="cb7-3"><span class="fu" style="color: #4758AB;
 background-color: null;
-font-style: inherit;">ssh-add</span> ~/.ssh/rhoai-demo</span>
-<span id="cb1-35"></span>
-<span id="cb1-36"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># --- Launch the install ---</span></span>
-<span id="cb1-37"><span class="fu" style="color: #4758AB;
+font-style: inherit;">ssh-add</span> ~/.ssh/rhoai-demo</span></code></pre></div></div>
+<div class="callout callout-style-simple callout-warning">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p><code>~/.ssh/rhoai-demo</code> is a <strong>private key</strong>. Add it to <code>.gitignore</code> and never copy it into a container image or CI artifact.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="launch-the-install" class="level3">
+<h3 class="anchored" data-anchor-id="launch-the-install">6. Launch the install</h3>
+<p>Drop the <code>install-config.yaml</code> from the next section into <code>./ocp-install/</code>, then hand control over to the installer. The <code>--dir</code> flag is what makes re-runs, <code>gather</code>, and <code>destroy</code> work consistently against the same state.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">mkdir</span> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">-p</span> ocp-install</span>
-<span id="cb1-38"><span class="co" style="color: #5E5E5E;
+<span id="cb8-2"><span class="co" style="color: #5E5E5E;
 background-color: null;
-font-style: inherit;"># put install-config.yaml in ./ocp-install first, then:</span></span>
-<span id="cb1-39"><span class="ex" style="color: null;
+font-style: inherit;"># Place install-config.yaml inside ./ocp-install/ first, then:</span></span>
+<span id="cb8-3"><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">openshift-install</span> create cluster <span class="at" style="color: #657422;
 background-color: null;
@@ -342,16 +345,22 @@ background-color: null;
 font-style: inherit;">--log-level</span><span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span>info</span></code></pre></div></div>
-</div>
+<p>Expect 30–45 minutes for an AWS IPI install. Watch progress with:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">tail</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-f</span> ocp-install/.openshift_install.log</span></code></pre></div></div>
 </section>
-<section id="example-install-config.yaml" class="level2">
-<h2 class="anchored" data-anchor-id="example-install-config.yaml">Example <code>install-config.yaml</code></h2>
+</section>
+<section id="prepare-the-install-config.yaml-file" class="level2">
+<h2 class="anchored" data-anchor-id="prepare-the-install-config.yaml-file">Prepare the <code>install-config.yaml</code> file:</h2>
 <p>Adapt <code>baseDomain</code>, instance types, and <code>pullSecret</code> before use.</p>
 <div class="code-with-filename">
 <div class="code-with-filename-file">
 <pre><strong>ocp-install/install-config.yaml</strong></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" data-filename="ocp-install/install-config.yaml" style="background: #f1f3f5;"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb2-1"><span class="fu" style="color: #4758AB;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10" data-filename="ocp-install/install-config.yaml" style="background: #f1f3f5;"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb10-1"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">apiVersion</span><span class="kw" style="color: #003B4F;
 background-color: null;
@@ -359,21 +368,21 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> v1</span></span>
-<span id="cb2-2"><span class="fu" style="color: #4758AB;
+<span id="cb10-2"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">baseDomain</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;"> rhoai.rh-aiservices.com</span></span>
-<span id="cb2-3"><span class="fu" style="color: #4758AB;
+font-style: inherit;"> belowthestack.dev</span></span>
+<span id="cb10-3"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">compute</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb2-4"><span class="at" style="color: #657422;
+<span id="cb10-4"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="kw" style="color: #003B4F;
 background-color: null;
@@ -388,7 +397,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> amd64</span></span>
-<span id="cb2-5"><span class="at" style="color: #657422;
+<span id="cb10-5"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -398,7 +407,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> Enabled</span></span>
-<span id="cb2-6"><span class="at" style="color: #657422;
+<span id="cb10-6"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -408,7 +417,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> worker</span></span>
-<span id="cb2-7"><span class="at" style="color: #657422;
+<span id="cb10-7"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -416,7 +425,7 @@ font-style: inherit;">platform</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb2-8"><span class="at" style="color: #657422;
+<span id="cb10-8"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -424,7 +433,7 @@ font-style: inherit;">aws</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb2-9"><span class="at" style="color: #657422;
+<span id="cb10-9"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -434,7 +443,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> m6i.4xlarge</span></span>
-<span id="cb2-10"><span class="at" style="color: #657422;
+<span id="cb10-10"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -446,13 +455,13 @@ background-color: null;
 font-style: inherit;"> </span><span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">0</span></span>
-<span id="cb2-11"><span class="fu" style="color: #4758AB;
+<span id="cb10-11"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">controlPlane</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb2-12"><span class="at" style="color: #657422;
+<span id="cb10-12"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -462,7 +471,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> amd64</span></span>
-<span id="cb2-13"><span class="at" style="color: #657422;
+<span id="cb10-13"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -472,7 +481,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> Enabled</span></span>
-<span id="cb2-14"><span class="at" style="color: #657422;
+<span id="cb10-14"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -482,7 +491,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> master</span></span>
-<span id="cb2-15"><span class="at" style="color: #657422;
+<span id="cb10-15"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -490,7 +499,7 @@ font-style: inherit;">platform</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb2-16"><span class="at" style="color: #657422;
+<span id="cb10-16"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -498,7 +507,7 @@ font-style: inherit;">aws</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb2-17"><span class="at" style="color: #657422;
+<span id="cb10-17"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -508,7 +517,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> g6.12xlarge</span></span>
-<span id="cb2-18"><span class="at" style="color: #657422;
+<span id="cb10-18"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -516,7 +525,7 @@ font-style: inherit;">rootVolume</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb2-19"><span class="at" style="color: #657422;
+<span id="cb10-19"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -528,7 +537,7 @@ background-color: null;
 font-style: inherit;"> </span><span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1000</span></span>
-<span id="cb2-20"><span class="at" style="color: #657422;
+<span id="cb10-20"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -540,13 +549,13 @@ background-color: null;
 font-style: inherit;"> </span><span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span></span>
-<span id="cb2-21"><span class="fu" style="color: #4758AB;
+<span id="cb10-21"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">metadata</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb2-22"><span class="at" style="color: #657422;
+<span id="cb10-22"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -556,13 +565,13 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> rhoai-demo</span></span>
-<span id="cb2-23"><span class="fu" style="color: #4758AB;
+<span id="cb10-23"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">networking</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb2-24"><span class="at" style="color: #657422;
+<span id="cb10-24"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -570,7 +579,7 @@ font-style: inherit;">clusterNetwork</span><span class="kw" style="color: #003B4
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb2-25"><span class="at" style="color: #657422;
+<span id="cb10-25"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="kw" style="color: #003B4F;
 background-color: null;
@@ -585,7 +594,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> 10.128.0.0/14</span></span>
-<span id="cb2-26"><span class="at" style="color: #657422;
+<span id="cb10-26"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -597,7 +606,7 @@ background-color: null;
 font-style: inherit;"> </span><span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">23</span></span>
-<span id="cb2-27"><span class="at" style="color: #657422;
+<span id="cb10-27"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -605,7 +614,7 @@ font-style: inherit;">machineNetwork</span><span class="kw" style="color: #003B4
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb2-28"><span class="at" style="color: #657422;
+<span id="cb10-28"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="kw" style="color: #003B4F;
 background-color: null;
@@ -620,7 +629,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> 10.0.0.0/16</span></span>
-<span id="cb2-29"><span class="at" style="color: #657422;
+<span id="cb10-29"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -630,7 +639,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> OVNKubernetes</span></span>
-<span id="cb2-30"><span class="at" style="color: #657422;
+<span id="cb10-30"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -638,7 +647,7 @@ font-style: inherit;">serviceNetwork</span><span class="kw" style="color: #003B4
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb2-31"><span class="at" style="color: #657422;
+<span id="cb10-31"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="kw" style="color: #003B4F;
 background-color: null;
@@ -646,13 +655,13 @@ font-weight: bold;
 font-style: inherit;">-</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> 172.30.0.0/16</span></span>
-<span id="cb2-32"><span class="fu" style="color: #4758AB;
+<span id="cb10-32"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">platform</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb2-33"><span class="at" style="color: #657422;
+<span id="cb10-33"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -660,7 +669,7 @@ font-style: inherit;">aws</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb2-34"><span class="at" style="color: #657422;
+<span id="cb10-34"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -670,7 +679,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> eu-west-3</span></span>
-<span id="cb2-35"><span class="fu" style="color: #4758AB;
+<span id="cb10-35"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">publish</span><span class="kw" style="color: #003B4F;
 background-color: null;
@@ -678,7 +687,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> External</span></span>
-<span id="cb2-36"><span class="fu" style="color: #4758AB;
+<span id="cb10-36"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">pullSecret</span><span class="kw" style="color: #003B4F;
 background-color: null;
@@ -688,7 +697,7 @@ background-color: null;
 font-style: inherit;"> </span><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">'{"auths":{"cloud.openshift.com":{"auth":"&lt;token&gt;","email":"&lt;email&gt;"}}}'</span></span>
-<span id="cb2-37"><span class="fu" style="color: #4758AB;
+<span id="cb10-37"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">sshKey</span><span class="kw" style="color: #003B4F;
 background-color: null;
