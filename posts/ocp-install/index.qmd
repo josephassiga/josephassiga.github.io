@@ -1,0 +1,226 @@
+---
+title: "Installing OpenShift on AWS: a repeatable script & walkthrough"
+description: |
+  A compact, annotated shell workflow to install OpenShift 4.x on AWS — with a
+  ready-to-edit install-config.yaml, sensible defaults, and the trade-offs you
+  should know before you press enter.
+author:
+  - name: Joseph Assiga
+    url: https://josephassiga.github.io/about.html
+    affiliation: Independent
+date: 2026-06-10
+date-modified: 2026-06-10
+categories: [openshift, cloud, aws, devops, kubernetes]
+image: /images/ocp-install.svg
+image-alt: "OpenShift installation flow diagram"
+keywords: [OpenShift, AWS, IPI, install-config, kubernetes, devops]
+format:
+  html:
+    toc: true
+    code-line-numbers: true
+---
+
+::: {.callout-note appearance="simple"}
+**TL;DR** — Save the shell script below, edit `OCP_VERSION` and your
+`install-config.yaml`, then run `openshift-install create cluster --dir ocp-install`.
+The full annotated walkthrough is below.
+:::
+
+This post documents a compact, repeatable shell-based workflow used to install
+OpenShift 4.x on AWS. I extracted the working script, annotated each step,
+and included a sample `install-config.yaml` for a minimal IPI installation.
+
+## Why this matters
+
+> Repeatable installs are the difference between a cluster you understand
+> and one you merely possess.
+
+- **Repeatability** — encapsulates download, install, and bootstrap steps.
+- **Auditability** — the full script appears below so you can review before running.
+- **Tunable** — variables like `OCP_VERSION` and `ARCH` are exposed for quick edits.
+
+![High-level installation flow.](/images/ocp-install.svg){#fig-ocp-flow fig-align="center" width="80%"}
+
+## AWS prerequisites — at a glance
+
+Before you run the installer, you need an EC2 host to drive the install and a
+public Route 53 hosted zone matching your `baseDomain`.
+
+::: {layout-ncol=2}
+![Create the installer EC2 host.](/images/create-ec2.png){#fig-ec2}
+
+![Create the public Route 53 hosted zone.](/images/create-public-hostedzone.png){#fig-hostedzone}
+:::
+
+Both screenshots show the minimum configuration that satisfies the OpenShift
+installer's IAM and DNS expectations.
+
+::: {.callout-tip}
+## Pick a specific version
+
+Avoid `latest-4.22` for production runs — pin to a release like `4.22.3` so the
+install is reproducible months later when `latest` has moved on.
+:::
+
+## Prerequisites
+
+- A Linux host with `curl`, `tar`, and `ssh` available.
+- IAM permissions matching the
+  [OpenShift required AWS permissions](https://docs.openshift.com/container-platform/latest/installing/installing_aws/installing-aws-account.html).
+- A valid OpenShift pull secret and an SSH key.
+
+## How the install script works
+
+```{mermaid}
+flowchart TD
+  A[Start] --> B[Create tools dir]
+  B --> C[Set env vars]
+  C --> D[Download oc client]
+  D --> E[Install oc & kubectl]
+  E --> F[Download openshift-install]
+  F --> G[Install openshift-install binary]
+  G --> H[Generate SSH key & add to agent]
+  H --> I[Write install-config.yaml]
+  I --> J[Run openshift-install create cluster]
+  J --> K[Wait for cluster readiness]
+  K --> L[Done]
+```
+
+## The script (annotated)
+
+Read it carefully and adapt the variables to your environment before running.
+
+```{.bash filename="ocp-install.sh"}
+#!/usr/bin/env bash
+set -euo pipefail
+
+yum update -y
+
+mkdir -p tools && cd tools/
+
+# Pin a specific minor for reproducibility.
+export OCP_VERSION="latest-4.22"
+export ARCH="x86_64"
+export HOST_ARCH="$(uname -m)"
+
+# --- oc / kubectl ---
+curl -fsSLk \
+  "https://mirror.openshift.com/pub/openshift-v4/${HOST_ARCH}/clients/ocp/${OCP_VERSION}/openshift-client-linux.tar.gz" \
+  -o oc.tar.gz
+tar zxf oc.tar.gz
+rm -f oc.tar.gz README.md
+chmod +x oc kubectl
+sudo mv oc kubectl /usr/local/bin/
+
+# --- openshift-install ---
+curl -fsSLk \
+  "https://mirror.openshift.com/pub/openshift-v4/${HOST_ARCH}/clients/ocp/${OCP_VERSION}/openshift-install-linux.tar.gz" \
+  -o openshift-install-linux.tar.gz
+tar zxf openshift-install-linux.tar.gz
+rm -f openshift-install-linux.tar.gz README.md
+chmod +x openshift-install
+sudo mv openshift-install /usr/local/bin/
+
+# --- SSH key for cluster nodes ---
+ssh-keygen -t ed25519 -N '' -f ~/.ssh/rhoai-demo
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/rhoai-demo
+
+# --- Launch the install ---
+mkdir -p ocp-install
+# put install-config.yaml in ./ocp-install first, then:
+openshift-install create cluster --dir ocp-install --log-level=info
+```
+
+## Example `install-config.yaml`
+
+Adapt `baseDomain`, instance types, and `pullSecret` before use.
+
+```{.yaml filename="ocp-install/install-config.yaml"}
+apiVersion: v1
+baseDomain: rhoai.rh-aiservices.com
+compute:
+  - architecture: amd64
+    hyperthreading: Enabled
+    name: worker
+    platform:
+      aws:
+        type: m6i.4xlarge
+    replicas: 0
+controlPlane:
+  architecture: amd64
+  hyperthreading: Enabled
+  name: master
+  platform:
+    aws:
+      type: g6.12xlarge
+      rootVolume:
+        size: 1000
+  replicas: 1
+metadata:
+  name: rhoai-demo
+networking:
+  clusterNetwork:
+    - cidr: 10.128.0.0/14
+      hostPrefix: 23
+  machineNetwork:
+    - cidr: 10.0.0.0/16
+  networkType: OVNKubernetes
+  serviceNetwork:
+    - 172.30.0.0/16
+platform:
+  aws:
+    region: eu-west-3
+publish: External
+pullSecret: '{"auths":{"cloud.openshift.com":{"auth":"<token>","email":"<email>"}}}'
+sshKey: 'ssh-ed25519 AAAA...redacted...'
+```
+
+::: {.callout-warning}
+## Never commit secrets
+
+`pullSecret` and the contents of `~/.ssh/rhoai-demo` are credentials.
+Add `install-config.yaml`, `*.pem`, and `auth/` to your `.gitignore` *before*
+running the installer — the installer mutates this file and writes
+`auth/kubeadmin-password` and `auth/kubeconfig` next to it.
+:::
+
+## Important notes & best practices
+
+- Replace `OCP_VERSION` with a specific release for reproducible runs.
+- Always pass `--dir` so re-running and `gather` commands work consistently.
+- Run downloads from a bastion with stable network connectivity.
+- The single-master `controlPlane.replicas: 1` above is a **lab** topology —
+  production needs three.
+
+::: {.callout-important}
+## Single-node OpenShift ≠ Production HA
+
+A `controlPlane.replicas: 1` install is fine for a demo cluster but should
+never carry workloads you can't lose. For HA, use three control-plane nodes
+and at least two workers across availability zones.
+:::
+
+## Troubleshooting
+
+| Symptom | First thing to check |
+|---|---|
+| Installer hangs on bootstrap | `openshift-install gather bootstrap --dir ocp-install` |
+| `mv` fails moving binaries | Re-run the `mv` lines with `sudo` |
+| AWS API quota errors | Verify the EC2/EBS quotas in your target region |
+| DNS resolution fails post-install | Verify Route 53 NS records match the hosted zone |
+
+: Common failure modes and where to look. {#tbl-troubleshooting}
+
+## Wrap-up
+
+If you treat the script in this post as a *starting point* rather than a
+black box — pin versions, audit IAM, and review the `install-config.yaml`
+before each run — you'll get a reproducible OpenShift install you actually
+understand.
+
+::: {.callout-note appearance="minimal"}
+Found a sharp edge? Open an issue at
+[`josephassiga/josephassiga.github.io`](https://github.com/josephassiga/josephassiga.github.io)
+— I keep this post updated as the installer evolves.
+:::

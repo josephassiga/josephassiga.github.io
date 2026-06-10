@@ -3,3 +3,6 @@
 
 # Quarto build output directory (where the rendered HTML goes)
 /_site/
+**/*.quarto_ipynb
+
+/rhoai.pem

@@ -1,1 +1,9 @@
-/* css styles */
+/* Small, non-themable tweaks live here. The bulk of styling is in theme.scss. */
+
+/* Smooth fade-in for listing pages */
+.quarto-listing { animation: fadeIn 320ms ease-out both; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

@@ -1,41 +1,91 @@
 project:
   type: website
-  title: "josephassiga.github.io"
+  output-dir: _site
+  resources:
+    - images/
 
 website:
-  title: "Technical Deep Dives — Joseph Assiga"
+  title: "Joseph Assiga"
   site-url: https://josephassiga.github.io/
-  description: "Personal blog with deep technical explorations, architecture notes, and product reviews."
+  description: "Long-form technical analyses, architecture notes, and product explorations focused on cloud platforms, OpenShift, and distributed systems."
   favicon: images/favicon.ico
   twitter-card: true
   open-graph: true
-  page-footer: "© Joseph Assiga"
-  
-  # 👇 MOVE LOGO INSIDE NAVBAR HERE
+  reader-mode: false
+
   navbar:
     logo: images/profile.jpeg
+    logo-alt: "Joseph Assiga"
+    title: "Joseph Assiga"
     background: primary
+    foreground: light
+    search: true
+    pinned: true
+    collapse-below: lg
     left:
-      - text: Home
+      - text: "Home"
         href: index.qmd
-      - text: About
+      - text: "Blog"
+        href: blog.qmd
+      - text: "About"
         href: about.qmd
-      - text: Posts
-        href: posts.qmd
     right:
       - icon: github
         href: https://github.com/josephassiga
-      - icon: twitter
-        href: https://twitter.com/assigajoseph
+        aria-label: GitHub
       - icon: linkedin
         href: https://www.linkedin.com/in/josephassiga/
+        aria-label: LinkedIn
+      - icon: twitter
+        href: https://twitter.com/assigajoseph
+        aria-label: Twitter
+      - icon: rss
+        href: blog.xml
+        aria-label: RSS
 
-  search: true 
+  page-footer:
+    background: light
+    border: true
+    left: |
+      © 2026 Joseph Assiga · Built with [Quarto](https://quarto.org)
+    center:
+      - text: "Home"
+        href: index.qmd
+      - text: "Blog"
+        href: blog.qmd
+      - text: "About"
+        href: about.qmd
+    right:
+      - icon: github
+        href: https://github.com/josephassiga
+      - icon: linkedin
+        href: https://www.linkedin.com/in/josephassiga/
+      - icon: twitter
+        href: https://twitter.com/assigajoseph
 
 format:
   html:
-    theme: cosmo
-    css: assets/css/site.css
-    code-copy: true
+    theme:
+      light: [cosmo, theme.scss]
+    css: styles.css
     toc: true
+    toc-depth: 3
+    toc-location: right
+    toc-title: "On this page"
+    code-copy: true
+    code-overflow: wrap
+    code-link: true
+    code-block-bg: true
+    code-block-border-left: "#3b5bdb"
     highlight-style: github
+    smooth-scroll: true
+    anchor-sections: true
+    fig-cap-location: bottom
+    tbl-cap-location: top
+    link-external-newwindow: true
+    link-external-icon: true
+    citations-hover: true
+    footnotes-hover: true
+
+execute:
+  freeze: auto

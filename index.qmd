@@ -1,29 +1,39 @@
-title: ""
 ---
-title: "Technical Deep Dives"
-description: "Deep technical analyses, architecture notes, and product explorations."
+title: ""
+pagetitle: "Joseph Assiga — Technical Deep Dives"
+page-layout: full
+title-block-banner: false
+toc: false
 listing:
+  id: latest-posts
   contents: posts
   sort: "date desc"
-  type: cards
+  type: grid
+  grid-columns: 3
+  max-items: 6
   categories: false
   sort-ui: false
   filter-ui: false
-page-layout: full
-title-block-banner: false
-
+  fields: [image, date, title, description, categories, reading-time]
+  image-height: "200px"
 ---
 
-<div class="container--narrow">
-<div class="site-hero">
-  <h1>Technical Deep Dives & Product Explorations</h1>
-  <p class="lead">This site hosts long-form, practical analyses of tools and products I use — focusing on architecture, trade-offs, and real-world fit.</p>
-</div>
-</div>
+::: {.site-hero}
+# Technical Deep Dives & Product Explorations
 
-::: listing
+[This site hosts long-form, practical analyses of cloud platforms, distributed systems, and developer tooling — focused on architecture, trade-offs, and real-world fit.]{.lead}
 
+::: {.hero-cta}
+[Read the blog](blog.qmd){.btn .btn-primary .btn-lg role="button"}
+[About me](about.qmd){.btn .btn-outline-primary .btn-lg role="button"}
 :::
----
+:::
 
+## Latest posts
 
+::: {#latest-posts}
+:::
+
+<div class="text-center" style="margin: 2rem 0 4rem;">
+  [Browse all posts →](blog.qmd){.btn .btn-outline-primary}
+</div>
