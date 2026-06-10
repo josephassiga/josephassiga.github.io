@@ -1,5 +1,47 @@
 [
   {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Technical Deep Dives & Product Explorations",
+    "section": "",
+    "text": "This site hosts long-form, practical analyses of cloud platforms, distributed systems, and developer tooling — focused on architecture, trade-offs, and real-world fit.\n\nRead the blog About me"
+  },
+  {
+    "objectID": "index.html#latest-posts",
+    "href": "index.html#latest-posts",
+    "title": "Technical Deep Dives & Product Explorations",
+    "section": "Latest posts",
+    "text": "Latest posts\n\n\n\n\n\n\n\n\n\n\nInstalling OpenShift on AWS: a repeatable script & walkthrough\n\n4 min\n\n\nopenshift\n\ncloud\n\naws\n\ndevops\n\nkubernetes\n\n\n\nA compact, annotated shell workflow to install OpenShift 4.x on AWS — with a ready-to-edit install-config.yaml, sensible defaults, and the trade-offs you should know before…\n\n\n\nJun 10, 2026\n\n\n\n\n\n\nNo matching items\n\n\nBrowse all posts →"
+  },
+  {
+    "objectID": "about.html",
+    "href": "about.html",
+    "title": "About",
+    "section": "",
+    "text": "I write technical deep dives, architecture explorations, and honest product evaluations. Posts aim to go beyond tutorials: they explain why systems behave the way they do and when to choose one approach over another."
+  },
+  {
+    "objectID": "about.html#about-this-blog",
+    "href": "about.html#about-this-blog",
+    "title": "About",
+    "section": "",
+    "text": "I write technical deep dives, architecture explorations, and honest product evaluations. Posts aim to go beyond tutorials: they explain why systems behave the way they do and when to choose one approach over another."
+  },
+  {
+    "objectID": "about.html#about-me",
+    "href": "about.html#about-me",
+    "title": "About",
+    "section": "About me",
+    "text": "About me\nHi — I’m Joseph. I work with cloud platforms, distributed systems, and developer tools. I like explaining trade-offs, drawing architecture diagrams, and testing ideas with small prototypes."
+  },
+  {
+    "objectID": "about.html#connect",
+    "href": "about.html#connect",
+    "title": "About",
+    "section": "Connect",
+    "text": "Connect\nFind me on the links above. If you’d like to collaborate or share feedback, reach out on Twitter or GitHub."
+  },
+  {
     "objectID": "posts/ocp-install/index.html",
     "href": "posts/ocp-install/index.html",
     "title": "Installing OpenShift on AWS: a repeatable script & walkthrough",
@@ -70,52 +112,10 @@
     "text": "Wrap-up\nIf you treat the script in this post as a starting point rather than a black box — pin versions, audit IAM, and review the install-config.yaml before each run — you’ll get a reproducible OpenShift install you actually understand.\n\n\n\n\n\n\nFound a sharp edge? Open an issue at josephassiga/josephassiga.github.io — I keep this post updated as the installer evolves."
   },
   {
-    "objectID": "about.html",
-    "href": "about.html",
-    "title": "About",
-    "section": "",
-    "text": "I write technical deep dives, architecture explorations, and honest product evaluations. Posts aim to go beyond tutorials: they explain why systems behave the way they do and when to choose one approach over another."
-  },
-  {
-    "objectID": "about.html#about-this-blog",
-    "href": "about.html#about-this-blog",
-    "title": "About",
-    "section": "",
-    "text": "I write technical deep dives, architecture explorations, and honest product evaluations. Posts aim to go beyond tutorials: they explain why systems behave the way they do and when to choose one approach over another."
-  },
-  {
-    "objectID": "about.html#about-me",
-    "href": "about.html#about-me",
-    "title": "About",
-    "section": "About me",
-    "text": "About me\nHi — I’m Joseph. I work with cloud platforms, distributed systems, and developer tools. I like explaining trade-offs, drawing architecture diagrams, and testing ideas with small prototypes."
-  },
-  {
-    "objectID": "about.html#connect",
-    "href": "about.html#connect",
-    "title": "About",
-    "section": "Connect",
-    "text": "Connect\nFind me on the links above. If you’d like to collaborate or share feedback, reach out on Twitter or GitHub."
-  },
-  {
     "objectID": "blog.html",
     "href": "blog.html",
     "title": "Blog",
     "section": "",
     "text": "Order By\n      Default\n      \n        Date - Oldest\n      \n      \n        Date - Newest\n      \n      \n        Title\n      \n    \n  \n    \n      \n      \n    \n\n\n\n\n\n\n\n\n\n\nInstalling OpenShift on AWS: a repeatable script & walkthrough\n\n4 min\n\n\nopenshift\n\ncloud\n\naws\n\ndevops\n\nkubernetes\n\n\n\nA compact, annotated shell workflow to install OpenShift 4.x on AWS — with a ready-to-edit install-config.yaml, sensible defaults, and the trade-offs you should know before…\n\n\n\nJun 10, 2026\n\n\n\n\n\n\nNo matching items"
-  },
-  {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "Technical Deep Dives & Product Explorations",
-    "section": "",
-    "text": "This site hosts long-form, practical analyses of cloud platforms, distributed systems, and developer tooling — focused on architecture, trade-offs, and real-world fit.\n\nRead the blog About me"
-  },
-  {
-    "objectID": "index.html#latest-posts",
-    "href": "index.html#latest-posts",
-    "title": "Technical Deep Dives & Product Explorations",
-    "section": "Latest posts",
-    "text": "Latest posts\n\n\n\n\n\n\n\n\n\n\nInstalling OpenShift on AWS: a repeatable script & walkthrough\n\n4 min\n\n\nopenshift\n\ncloud\n\naws\n\ndevops\n\nkubernetes\n\n\n\nA compact, annotated shell workflow to install OpenShift 4.x on AWS — with a ready-to-edit install-config.yaml, sensible defaults, and the trade-offs you should know before…\n\n\n\nJun 10, 2026\n\n\n\n\n\n\nNo matching items\n\n\nBrowse all posts →"
   }
 ]
