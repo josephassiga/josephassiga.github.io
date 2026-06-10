@@ -6,9 +6,8 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="Deep technical analyses, architecture notes, and product explorations.">
 
-<title>Technical Deep Dives – Technical Deep Dives — Joseph Assiga</title>
+<title>Joseph Assiga — Technical Deep Dives – Joseph Assiga</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -28,7 +27,6 @@ ul.task-list li input[type="checkbox"] {
 
 
 <script src="site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="site_libs/quarto-nav/headroom.min.js"></script>
 <script src="site_libs/clipboard/clipboard.min.js"></script>
 <script src="site_libs/quarto-search/autocomplete.umd.js"></script>
 <script src="site_libs/quarto-search/fuse.min.js"></script>
@@ -43,10 +41,10 @@ ul.task-list li input[type="checkbox"] {
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-de63f62b328812d8e578a4d74e282472.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-4dcd807de65904ed68f3c707d060fa81.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-4a115daab0021f227b98277d5f9ba6cc.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-caaed9364d3a23a3f4ce5b368d6418f8.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -77,20 +75,20 @@ ul.task-list li input[type="checkbox"] {
 <script>
 
   window.document.addEventListener("DOMContentLoaded", function (_event) {
-    const listingTargetEl = window.document.querySelector('#listing-listing .list');
+    const listingTargetEl = window.document.querySelector('#listing-latest-posts .list');
     if (!listingTargetEl) {
       // No listing discovered, do not attach.
       return; 
     }
 
     const options = {
-      valueNames: ['listing-date','listing-title','listing-author','listing-image','listing-description',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
+      valueNames: ['listing-image','listing-date','listing-title','listing-description','listing-categories','listing-reading-time',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
       
-      searchColumns: ["listing-date","listing-title","listing-author","listing-image","listing-description"],
+      searchColumns: ["listing-title","listing-author","listing-date","listing-image","listing-description"],
     };
 
     window['quarto-listings'] = window['quarto-listings'] || {};
-    window['quarto-listings']['listing-listing'] = new List('listing-listing', options);
+    window['quarto-listings']['listing-latest-posts'] = new List('listing-latest-posts', options);
 
     if (window['quarto-listing-loaded']) {
       window['quarto-listing-loaded']();
@@ -103,6 +101,7 @@ ul.task-list li input[type="checkbox"] {
     }
   })
   </script>
+<style>html{ scroll-behavior: smooth; }</style>
 
   <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
   <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
@@ -134,14 +133,16 @@ window.Quarto = {
 };
 </script>
 
-<link rel="stylesheet" href="assets/css/site.css">
-<meta property="og:title" content="Technical Deep Dives – Technical Deep Dives — Joseph Assiga">
-<meta property="og:description" content="Deep technical analyses, architecture notes, and product explorations.">
-<meta property="og:image" content="https://josephassiga.github.io/posts/post-with-code/image.jpg">
-<meta property="og:site_name" content="Technical Deep Dives — Joseph Assiga">
-<meta name="twitter:title" content="Technical Deep Dives – Technical Deep Dives — Joseph Assiga">
-<meta name="twitter:description" content="Deep technical analyses, architecture notes, and product explorations.">
-<meta name="twitter:image" content="https://josephassiga.github.io/posts/post-with-code/image.jpg">
+<link rel="stylesheet" href="styles.css">
+<meta property="og:title" content="Joseph Assiga — Technical Deep Dives">
+<meta property="og:description" content="Long-form technical analyses, architecture notes, and product explorations focused on cloud platforms, OpenShift, and distributed systems.">
+<meta property="og:image" content="https://josephassiga.github.io/images/ocp-install.svg">
+<meta property="og:site_name" content="Joseph Assiga">
+<meta property="og:image:alt" content="OpenShift installation flow diagram">
+<meta name="twitter:title" content="Joseph Assiga — Technical Deep Dives">
+<meta name="twitter:description" content="Long-form technical analyses, architecture notes, and product explorations focused on cloud platforms, OpenShift, and distributed systems.">
+<meta name="twitter:image" content="https://josephassiga.github.io/images/ocp-install.svg">
+<meta name="twitter:image:alt" content="OpenShift installation flow diagram">
 <meta name="twitter:card" content="summary_large_image">
 </head>
 
@@ -153,11 +154,11 @@ window.Quarto = {
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a href="./index.html" class="navbar-brand navbar-brand-logo">
-    <img src="./images/profile.jpeg" alt="" class="navbar-logo light-content">
-    <img src="./images/profile.jpeg" alt="" class="navbar-logo dark-content">
+    <img src="./images/profile.jpeg" alt="Joseph Assiga" class="navbar-logo light-content">
+    <img src="./images/profile.jpeg" alt="Joseph Assiga" class="navbar-logo dark-content">
     </a>
     <a class="navbar-brand" href="./index.html">
-    <span class="navbar-title">Technical Deep Dives — Joseph Assiga</span>
+    <span class="navbar-title">Joseph Assiga</span>
     </a>
   </div>
             <div id="quarto-search" class="" title="Search"></div>
@@ -171,27 +172,32 @@ window.Quarto = {
 <span class="menu-text">Home</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./about.html"> 
-<span class="menu-text">About</span></a>
+    <a class="nav-link" href="./blog.html"> 
+<span class="menu-text">Blog</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./posts.qmd"> 
-<span class="menu-text">Posts</span></a>
+    <a class="nav-link" href="./about.html"> 
+<span class="menu-text">About</span></a>
   </li>  
 </ul>
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item compact">
-    <a class="nav-link" href="https://github.com/josephassiga"> <i class="bi bi-github" role="img">
+    <a class="nav-link" href="https://github.com/josephassiga"> <i class="bi bi-github" role="img" aria-label="GitHub">
 </i> 
 <span class="menu-text"></span></a>
   </li>  
   <li class="nav-item compact">
-    <a class="nav-link" href="https://twitter.com/assigajoseph"> <i class="bi bi-twitter" role="img">
+    <a class="nav-link" href="https://www.linkedin.com/in/josephassiga/"> <i class="bi bi-linkedin" role="img" aria-label="LinkedIn">
 </i> 
 <span class="menu-text"></span></a>
   </li>  
   <li class="nav-item compact">
-    <a class="nav-link" href="https://www.linkedin.com/in/josephassiga/"> <i class="bi bi-linkedin" role="img">
+    <a class="nav-link" href="https://twitter.com/assigajoseph"> <i class="bi bi-twitter" role="img" aria-label="Twitter">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="./blog.xml"> <i class="bi bi-rss" role="img" aria-label="RSS">
 </i> 
 <span class="menu-text"></span></a>
   </li>  
@@ -206,120 +212,71 @@ window.Quarto = {
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        <nav id="TOC" role="doc-toc" class="toc-active">
-    <h2 id="toc-title">On this page</h2>
-   
-  <ul>
-  <li><a href="#title" id="toc-title" class="nav-link active" data-scroll-target="#title">title: “”</a></li>
-  </ul>
-</nav>
-    </div>
+    
 <!-- main -->
-<main class="content column-page-left" id="quarto-document-content">
+<main class="content column-page" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
 
-<header id="title-block-header" class="quarto-title-block default">
-<div class="quarto-title">
-<h1 class="title">Technical Deep Dives</h1>
+
+
+
+<section id="technical-deep-dives-product-explorations" class="level1 site-hero">
+<h1>Technical Deep Dives &amp; Product Explorations</h1>
+<p><span class="lead">This site hosts long-form, practical analyses of cloud platforms, distributed systems, and developer tooling — focused on architecture, trade-offs, and real-world fit.</span></p>
+<div class="hero-cta">
+<p><a href="./blog.html" class="btn btn-primary btn-lg" role="button">Read the blog</a> <a href="./about.html" class="btn btn-outline-primary btn-lg" role="button">About me</a></p>
 </div>
-
-<div>
-  <div class="description">
-    Deep technical analyses, architecture notes, and product explorations.
-  </div>
-</div>
-
-
-<div class="quarto-title-meta column-page-left">
-
-    
-  
-    
-  </div>
-  
-
-
-</header>
-
-
-<section id="title" class="level2">
-<h2 class="anchored" data-anchor-id="title">title: “”</h2>
-<p>title: “Technical Deep Dives” description: “Deep technical analyses, architecture notes, and product explorations.” listing: contents: posts sort: “date desc” type: cards categories: false sort-ui: false filter-ui: false page-layout: full title-block-banner: false</p>
-<hr>
-<div class="container--narrow">
-<div class="site-hero">
-<h1>
-Technical Deep Dives &amp; Product Explorations
-</h1>
-<p class="lead">
-This site hosts long-form, practical analyses of tools and products I use — focusing on architecture, trade-offs, and real-world fit.
+</section>
+<section id="latest-posts" class="level2">
+<h2 class="anchored" data-anchor-id="latest-posts">Latest posts</h2>
+<div id="listing-latest-posts" class="quarto-listing quarto-listing-container-grid">
+<div class="list grid quarto-listing-cols-3">
+<div class="g-col-1" data-index="0" data-categories="b3BlbnNoaWZ0JTJDY2xvdWQlMkNhd3MlMkNkZXZvcHMlMkNrdWJlcm5ldGVz" data-listing-date-sort="1781049600000" data-listing-file-modified-sort="1781125174816" data-listing-date-modified-sort="1781049600000" data-listing-reading-time-sort="4" data-listing-word-count-sort="779">
+<a href="./posts/ocp-install/index.html" class="quarto-grid-link">
+<div class="quarto-grid-item card h-100 card-left">
+<p class="card-img-top">
+<img loading="lazy" src="./images/ocp-install.svg" class="thumbnail-image card-img" style="height: 200px;" alt="OpenShift installation flow diagram">
 </p>
-</div>
-</div>
-<div class="listing">
+<div class="card-body post-contents">
+<h5 class="no-anchor card-title listing-title">
+Installing OpenShift on AWS: a repeatable script &amp; walkthrough
+</h5>
+<div class="listing-reading-time card-text text-muted">4 min</div>
+<div class="listing-categories">
+
+<div class="listing-category" onclick="window.quartoListingCategory('b3BlbnNoaWZ0'); return false;">openshift</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('Y2xvdWQ='); return false;">cloud</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('YXdz'); return false;">aws</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('ZGV2b3Bz'); return false;">devops</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('a3ViZXJuZXRlcw=='); return false;">kubernetes</div>
 
 </div>
-<hr>
+<div class="card-text listing-description delink">
+<p>A compact, annotated shell workflow to install OpenShift 4.x on AWS — with a ready-to-edit install-config.yaml, sensible defaults, and the trade-offs you should know before…</p>
+</div>
+<div class="card-attribution card-text-small end">
+<div class="listing-date">
+Jun 10, 2026
+</div>
+</div>
+</div>
+</div></a>
+</div>
+</div>
+<div class="listing-no-matching d-none">No matching items</div>
+</div>
+<div class="text-center" style="margin: 2rem 0 4rem;">
+<p><a href="./blog.html" class="btn btn-outline-primary">Browse all posts →</a></p>
+</div>
 
 
 
 </section>
 
-<div class="quarto-listing quarto-listing-container-cards" id="listing-listing">
-<div class="list quarto-listing-default">
-<div class="quarto-post image-left" data-index="0" data-categories="bmV3cyUyQ2NvZGUlMkNhbmFseXNpcw==" data-listing-date-sort="1715472000000" data-listing-file-modified-sort="1781085393141" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="7">
-<div class="thumbnail"><a href="./posts/post-with-code/index.html" class="no-external">
-
-<img loading="lazy" src="./posts/post-with-code/image.jpg" class="thumbnail-image">
-
-</a></div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/post-with-code/index.html" class="no-external">Post With Code</a>
-</h3>
-<div class="delink listing-description"><a href="./posts/post-with-code/index.html" class="no-external">
-This is a post with executable code.
-</a></div>
-</div>
-<div class="metadata">
-<a href="./posts/post-with-code/index.html" class="no-external">
-<div class="listing-date">
-May 12, 2024
-</div>
-<div class="listing-author">
-Joseph Assiga
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-left" data-index="1" data-categories="bmV3cw==" data-listing-date-sort="1715212800000" data-listing-file-modified-sort="1781085393141" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="32">
-<div class="thumbnail"><a href="./posts/welcome/index.html" class="no-external">
-
-<p class="card-img-top"><img loading='lazy' src="posts/welcome/thumbnail.jpg"  class="thumbnail-image card-img"/></p>
-
-</a></div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/welcome/index.html" class="no-external">Welcome To My Blog</a>
-</h3>
-<div class="delink listing-description"><a href="./posts/welcome/index.html" class="no-external">
-This is the first post in a Quarto blog. Welcome!
-</a></div>
-</div>
-<div class="metadata">
-<a href="./posts/welcome/index.html" class="no-external">
-<div class="listing-date">
-May 9, 2024
-</div>
-<div class="listing-author">
-Joseph Assiga
-</div>
-</a>
-</div>
-</div>
-</div>
-<div class="listing-no-matching d-none">No matching items</div>
-</div></main> <!-- /main -->
+</main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     const icon = "";
@@ -407,6 +364,13 @@ Joseph Assiga
           if (link.dataset.originalHref !== undefined) {
             link.href = link.dataset.originalHref;
           }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+            // default icon
+            link.classList.add("external");
         }
       }
     function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
@@ -724,13 +688,48 @@ Joseph Assiga
 <footer class="footer">
   <div class="nav-footer">
     <div class="nav-footer-left">
-      &nbsp;
-    </div>   
+<p>© 2026 Joseph Assiga · Built with <a href="https://quarto.org">Quarto</a></p>
+</div>   
     <div class="nav-footer-center">
-<p>© Joseph Assiga</p>
-</div>
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item">
+    <a class="nav-link" href="./index.html">
+<p>Home</p>
+</a>
+  </li>  
+    <li class="nav-item">
+    <a class="nav-link" href="./blog.html">
+<p>Blog</p>
+</a>
+  </li>  
+    <li class="nav-item">
+    <a class="nav-link" href="./about.html">
+<p>About</p>
+</a>
+  </li>  
+</ul>
+    </div>
     <div class="nav-footer-right">
-      &nbsp;
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/josephassiga">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/josephassiga/">
+      <i class="bi bi-linkedin" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/assigajoseph">
+      <i class="bi bi-twitter" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
     </div>
   </div>
 </footer>
@@ -738,4 +737,5 @@ Joseph Assiga
 
 
 
+<script src="site_libs/quarto-html/zenscroll-min.js"></script>
 </body></html>

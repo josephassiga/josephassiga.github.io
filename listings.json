@@ -1,9 +1,14 @@
 [
   {
+    "listing": "/blog.html",
+    "items": [
+      "/posts/ocp-install/index.html"
+    ]
+  },
+  {
     "listing": "/index.html",
     "items": [
-      "/posts/post-with-code/index.html",
-      "/posts/welcome/index.html"
+      "/posts/ocp-install/index.html"
     ]
   }
 ]
