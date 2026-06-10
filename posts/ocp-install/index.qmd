@@ -69,76 +69,131 @@ install is reproducible months later when `latest` has moved on.
   [OpenShift required AWS permissions](https://docs.openshift.com/container-platform/latest/installing/installing_aws/installing-aws-account.html).
 - A valid OpenShift pull secret and an SSH key.
 
-## How the install script works
-
-```{mermaid}
-flowchart TD
-  A[Start] --> B[Create tools dir]
-  B --> C[Set env vars]
-  C --> D[Download oc client]
-  D --> E[Install oc & kubectl]
-  E --> F[Download openshift-install]
-  F --> G[Install openshift-install binary]
-  G --> H[Generate SSH key & add to agent]
-  H --> I[Write install-config.yaml]
-  I --> J[Run openshift-install create cluster]
-  J --> K[Wait for cluster readiness]
-  K --> L[Done]
-```
-
 ## The script (annotated)
 
-Read it carefully and adapt the variables to your environment before running.
+Rather than dropping the full `ocp-install.sh` here as one block, this section
+walks through the script **one command group at a time** so you can copy,
+adapt, and run each step independently.
 
-```{.bash filename="ocp-install.sh"}
-#!/usr/bin/env bash
-set -euo pipefail
+::: {.callout-tip appearance="simple"}
+The whole file is also available as a single download:
+[`ocp-install.sh`](/images/ocp-install.sh). The sections below correspond
+1:1 to the blocks inside it.
+:::
 
-yum update -y
+### 1. Patch the host
 
+A predictable starting state. Run a full package update so the build host
+isn't carrying half-applied kernel or `curl` patches when the installer
+hits the network.
+
+```bash
+sudo yum update -y
+```
+
+### 2. Working directory and pinned versions
+
+Everything below assumes a dedicated `tools/` directory and three exported
+variables. Pinning `OCP_VERSION` to a specific release (not `latest-*`) is
+what makes the install reproducible weeks later.
+
+```bash
 mkdir -p tools && cd tools/
 
-# Pin a specific minor for reproducibility.
-export OCP_VERSION="latest-4.22"
+export OCP_VERSION="latest-4.22"   # pin to e.g. 4.22.3 for production
 export ARCH="x86_64"
 export HOST_ARCH="$(uname -m)"
+```
 
-# --- oc / kubectl ---
+### 3. Install the `oc` and `kubectl` clients
+
+Download the client tarball from the Red Hat mirror, extract the two
+binaries, and move them onto `PATH`. The `-fsSL` flags make `curl` fail
+loudly on HTTP errors instead of silently writing an HTML error page into
+`oc.tar.gz`.
+
+```bash
 curl -fsSLk \
   "https://mirror.openshift.com/pub/openshift-v4/${HOST_ARCH}/clients/ocp/${OCP_VERSION}/openshift-client-linux.tar.gz" \
   -o oc.tar.gz
+
 tar zxf oc.tar.gz
 rm -f oc.tar.gz README.md
 chmod +x oc kubectl
 sudo mv oc kubectl /usr/local/bin/
+```
 
-# --- openshift-install ---
+Verify before moving on:
+
+```bash
+oc version --client
+kubectl version --client
+```
+
+### 4. Install the `openshift-install` binary
+
+Same pattern, different tarball. This is the installer that orchestrates
+the bootstrap node, control plane, and AWS resources.
+
+```bash
 curl -fsSLk \
   "https://mirror.openshift.com/pub/openshift-v4/${HOST_ARCH}/clients/ocp/${OCP_VERSION}/openshift-install-linux.tar.gz" \
   -o openshift-install-linux.tar.gz
+
 tar zxf openshift-install-linux.tar.gz
 rm -f openshift-install-linux.tar.gz README.md
 chmod +x openshift-install
 sudo mv openshift-install /usr/local/bin/
+```
 
-# --- SSH key for cluster nodes ---
+Verify the version matches `OCP_VERSION`:
+
+```bash
+openshift-install version
+```
+
+### 5. Generate the cluster SSH key
+
+The installer bakes this public key into every node so you can `ssh core@…`
+later for diagnostics. Use a dedicated key per cluster — don't reuse your
+personal one.
+
+```bash
 ssh-keygen -t ed25519 -N '' -f ~/.ssh/rhoai-demo
 eval "$(ssh-agent -s)"
 ssh-add ~/.ssh/rhoai-demo
+```
 
-# --- Launch the install ---
+::: {.callout-warning appearance="simple"}
+`~/.ssh/rhoai-demo` is a **private key**. Add it to `.gitignore` and never
+copy it into a container image or CI artifact.
+:::
+
+### 6. Launch the install
+
+Drop the `install-config.yaml` from the next section into `./ocp-install/`,
+then hand control over to the installer. The `--dir` flag is what makes
+re-runs, `gather`, and `destroy` work consistently against the same state.
+
+```bash
 mkdir -p ocp-install
-# put install-config.yaml in ./ocp-install first, then:
+# Place install-config.yaml inside ./ocp-install/ first, then:
 openshift-install create cluster --dir ocp-install --log-level=info
 ```
 
-## Example `install-config.yaml`
+Expect 30–45 minutes for an AWS IPI install. Watch progress with:
+
+```bash
+tail -f ocp-install/.openshift_install.log
+```
+
+## Prepare the `install-config.yaml` file:
 
 Adapt `baseDomain`, instance types, and `pullSecret` before use.
 
 ```{.yaml filename="ocp-install/install-config.yaml"}
 apiVersion: v1
-baseDomain: rhoai.rh-aiservices.com
+baseDomain: belowthestack.dev
 compute:
   - architecture: amd64
     hyperthreading: Enabled
