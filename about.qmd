@@ -16,4 +16,14 @@ about:
 
 ---
 
-About this blog
+## About this blog
+
+I write technical deep dives, architecture explorations, and honest product evaluations. Posts aim to go beyond tutorials: they explain why systems behave the way they do and when to choose one approach over another.
+
+## About me
+
+Hi — I'm Joseph. I work with cloud platforms, distributed systems, and developer tools. I like explaining trade-offs, drawing architecture diagrams, and testing ideas with small prototypes.
+
+## Connect
+
+Find me on the links above. If you'd like to collaborate or share feedback, reach out on Twitter or GitHub.

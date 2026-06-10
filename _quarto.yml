@@ -1,13 +1,28 @@
 project:
   type: website
+  title: josephassiga.github.io
+
+book:
+  authors: ["Joseph Assiga"]
 
 website:
-  title: "AI & ML Blogs"
+  title: "Technical Deep Dives — Joseph Assiga"
   site-url: https://josephassiga.github.io/
+  description: "Personal blog with deep technical explorations, architecture notes, and product reviews."
+  favicon: images/favicon.ico
+  twitter-card: true
+  open-graph: true
+  page-footer: "© Joseph Assiga"
+  logo: images/profile.jpeg
   navbar:
     background: primary
-    left: 
-      - about.qmd
+    left:
+      - text: Home
+        href: index.qmd
+      - text: About
+        href: about.qmd
+      - text: Posts
+        href: index.qmd
     right:
       - icon: github
         href: https://github.com/josephassiga
@@ -15,14 +30,25 @@ website:
         href: https://twitter.com/assigajoseph
       - icon: linkedin
         href: https://www.linkedin.com/in/josephassiga/
-  favicon: images/favicon.ico
-  twitter-card: true
-  open-graph: true
-  page-footer: "Copyright 2024, Joseph Assiga" 
+
+collections:
+  posts:
+    type: posts
+    path: posts
+    url: /posts
+    sort: date desc
+    template: post
+
 format:
   html:
     theme: cosmo
-    css: styles.css
+    css: assets/css/site.css
+    code-copy: true
+    toc: true
+    highlight-style: github
+    include-in-header: []
+
+search: true
 
 
 

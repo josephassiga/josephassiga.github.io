@@ -1,14 +1,29 @@
----
 title: ""
+---
+title: "Technical Deep Dives"
+description: "Deep technical analyses, architecture notes, and product explorations."
 listing:
   contents: posts
   sort: "date desc"
-  type: default
+  type: cards
   categories: false
   sort-ui: false
   filter-ui: false
 page-layout: full
 title-block-banner: false
+
+---
+
+<div class="container--narrow">
+<div class="site-hero">
+  <h1>Technical Deep Dives & Product Explorations</h1>
+  <p class="lead">This site hosts long-form, practical analyses of tools and products I use — focusing on architecture, trade-offs, and real-world fit.</p>
+</div>
+</div>
+
+::: listing
+
+:::
 ---
 
 

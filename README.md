@@ -90,3 +90,21 @@ Built with [Quarto](https://quarto.org/) — a modern publishing platform that b
 ```
 Made with ☕ and an obsession for technical depth
 ```
+
+## Develop / Build
+
+Quick commands to build and preview the site locally (requires Quarto installed):
+
+```bash
+# render the site to _site/
+quarto render
+
+# preview locally with live reload
+quarto preview --port 4200
+```
+
+If you don't have Quarto installed, see https://quarto.org/docs/get-started/ for installers.
+
+## Creating New Posts
+
+Use the `templates/post-template.qmd` as a starting point for new articles. Copy it into `posts/<slug>/index.qmd` and update the front matter (`title`, `date`, `categories`, and `image`). Keep posts focused on: Summary, Background, Technical Analysis, Examples, and Conclusion.
