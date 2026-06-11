@@ -507,6 +507,10 @@ spec:
 oc apply -f op-nfd.yaml
 ```
 
+::: {.callout-tip appearance="simple"}
+Leave the default name and settings, and click Create `NodeFeatureDiscovery`
+:::
+
 #### 2.2 NVIDIA GPU Operator
 
 The NVIDIA GPU operator ships in **OwnNamespace** install mode, so the
@@ -547,20 +551,13 @@ oc apply -f op-nvidia-gpu.yaml
 
 #### 2.3 Roll out the GPU driver — `ClusterPolicy`
 
-Once both CSVs reach `Succeeded`, apply NVIDIA's default `ClusterPolicy` —
-the CR that actually rolls out the driver DaemonSet, container toolkit,
-and DCGM exporter onto every GPU-labeled node:
+Once both CSVs reach `Succeeded`, you create a `ClusterPolicy` — the CR
+that actually rolls out the driver DaemonSet, container toolkit, and
+DCGM exporter onto every GPU-labeled node.
 
-```bash
-oc get clusterpolicy gpu-cluster-policy -o yaml >/dev/null 2>&1 \
-  || oc apply -f https://raw.githubusercontent.com/NVIDIA/gpu-operator/main/deployments/gpu-operator/values-openshift.yaml
-```
-
-Verify a node now advertises `nvidia.com/gpu`:
-
-```bash
-oc get nodes -o json | jq '.items[].status.capacity["nvidia.com/gpu"]'
-```
+::: {.callout-tip appearance="simple"}
+Leave the default name and settings, and click Create `ClusterPolicy` and wait for 15 to 20 minutes for the driver to roll out.
+:::
 
 ### 3. Install the Red Hat OpenShift AI operator
 
