@@ -538,7 +538,7 @@ background-color: null;
 font-style: inherit;">INFO</span>     export KUBECONFIG=/home/ec2-user/ocp-install/auth/kubeconfig</span>
 <span id="cb10-9"><span class="ex" style="color: null;
 background-color: null;
-font-style: inherit;">INFO</span> Access the OpenShift web-console here: https://console-openshift-console.apps.rhoai-demo.xxxx.dev</span>
+font-style: inherit;">INFO</span> Access the OpenShift web-console here: https://console-openshift-console...</span>
 <span id="cb10-10"><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">INFO</span> Login to the console with user: <span class="st" style="color: #20794D;

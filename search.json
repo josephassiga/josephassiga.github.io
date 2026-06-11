@@ -1,5 +1,47 @@
 [
   {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Technical Deep Dives & Product Explorations",
+    "section": "",
+    "text": "This site hosts long-form, practical analyses of cloud platforms, distributed systems, and developer tooling — focused on architecture, trade-offs, and real-world fit.\n\nRead the blog About me"
+  },
+  {
+    "objectID": "index.html#latest-posts",
+    "href": "index.html#latest-posts",
+    "title": "Technical Deep Dives & Product Explorations",
+    "section": "Latest posts",
+    "text": "Latest posts\n\n\n\n\n\n\n\n\n\n\nInstalling Red Hat OpenShift AI Self-Managed 3.4(latest) in Red Hat Openshift 4.22(latest) on AWS: A Shell-Based Guide\n\n14 min\n\n\nopenshift\n\ncloud\n\naws\n\ndevops\n\nkubernetes\n\n\n\nA compact, annotated shell steps to install Red Hat Openshift AI on OpenShift 4.22 (latest version) on AWS - with a ready-to-edit install-config.yaml, sensible defaults, and…\n\n\n\nJun 10, 2026\n\n\n\n\n\n\nNo matching items\n\n\nBrowse all posts →"
+  },
+  {
+    "objectID": "about.html",
+    "href": "about.html",
+    "title": "About",
+    "section": "",
+    "text": "I write technical deep dives, architecture explorations, and honest product evaluations. Posts aim to go beyond tutorials: they explain why systems behave the way they do and when to choose one approach over another."
+  },
+  {
+    "objectID": "about.html#about-this-blog",
+    "href": "about.html#about-this-blog",
+    "title": "About",
+    "section": "",
+    "text": "I write technical deep dives, architecture explorations, and honest product evaluations. Posts aim to go beyond tutorials: they explain why systems behave the way they do and when to choose one approach over another."
+  },
+  {
+    "objectID": "about.html#about-me",
+    "href": "about.html#about-me",
+    "title": "About",
+    "section": "About me",
+    "text": "About me\nHi — I’m Joseph. I work with cloud platforms, distributed systems, and developer tools. I like explaining trade-offs, drawing architecture diagrams, and testing ideas with small prototypes."
+  },
+  {
+    "objectID": "about.html#connect",
+    "href": "about.html#connect",
+    "title": "About",
+    "section": "Connect",
+    "text": "Connect\nFind me on the links above. If you’d like to collaborate or share feedback, reach out on Twitter or GitHub."
+  },
+  {
     "objectID": "posts/ocp-install/index.html",
     "href": "posts/ocp-install/index.html",
     "title": "Installing Red Hat OpenShift AI Self-Managed 3.4(latest) in Red Hat Openshift 4.22(latest) on AWS: A Shell-Based Guide",
@@ -39,7 +81,7 @@
     "href": "posts/ocp-install/index.html#what-a-successful-install-looks-like",
     "title": "Installing Red Hat OpenShift AI Self-Managed 3.4(latest) in Red Hat Openshift 4.22(latest) on AWS: A Shell-Based Guide",
     "section": "What a successful install looks like",
-    "text": "What a successful install looks like\nAfter the bootstrap phase finishes and the cluster operators settle, the installer prints a final summary block. If you see something close to the output below, the cluster is up and the web console is reachable.\n [ec2-user@ip-172-31-27-222 ~]$ openshift-install create cluster --dir ocp-install/ --log-level=info\n{.text filename=\"installer output\"}\nINFO Waiting up to 30m0s (until 3:53AM UTC) to ensure each cluster operator has finished progressing...\nINFO All cluster operators have completed progressing\nINFO Checking to see if there is a route at openshift-console/console...\nINFO Install complete!\nINFO To access the cluster as the system:admin user when using 'oc', run\nINFO     export KUBECONFIG=/home/ec2-user/ocp-install/auth/kubeconfig\nINFO Access the OpenShift web-console here: https://console-openshift-console.apps.rhoai-demo.xxxx.dev\nINFO Login to the console with user: \"kubeadmin\", and password: \"UoGgI-xxxx\"\nINFO Time elapsed: 29s\nTwo things worth doing immediately:\n# 1. Wire up oc/kubectl against the new cluster\nexport KUBECONFIG=/home/ec2-user/ocp-install/auth/kubeconfig\noc get nodes\noc get clusteroperators\n# 2. Save (and then rotate) the kubeadmin credentials\ncat ocp-install/auth/kubeadmin-password\n\n\n\n\n\n\nThe kubeadmin account is a temporary bootstrap credential. As soon as you’ve wired up a real identity provider (OIDC, htpasswd, LDAP…) and granted cluster-admin to a real user, delete the kubeadmin secret:\noc delete secret kubeadmin -n kube-system\n\n\n\n\n\n\n\n\n\nWarningNever commit secrets\n\n\n\npullSecret and the contents of ~/.ssh/rhoai-demo are credentials. Add install-config.yaml, *.pem, and auth/ to your .gitignore before running the installer — the installer mutates this file and writes auth/kubeadmin-password and auth/kubeconfig next to it."
+    "text": "What a successful install looks like\nAfter the bootstrap phase finishes and the cluster operators settle, the installer prints a final summary block. If you see something close to the output below, the cluster is up and the web console is reachable.\n [ec2-user@ip-172-31-27-222 ~]$ openshift-install create cluster --dir ocp-install/ --log-level=info\n{.text filename=\"installer output\"}\nINFO Waiting up to 30m0s (until 3:53AM UTC) to ensure each cluster operator has finished progressing...\nINFO All cluster operators have completed progressing\nINFO Checking to see if there is a route at openshift-console/console...\nINFO Install complete!\nINFO To access the cluster as the system:admin user when using 'oc', run\nINFO     export KUBECONFIG=/home/ec2-user/ocp-install/auth/kubeconfig\nINFO Access the OpenShift web-console here: https://console-openshift-console...\nINFO Login to the console with user: \"kubeadmin\", and password: \"UoGgI-xxxx\"\nINFO Time elapsed: 29s\nTwo things worth doing immediately:\n# 1. Wire up oc/kubectl against the new cluster\nexport KUBECONFIG=/home/ec2-user/ocp-install/auth/kubeconfig\noc get nodes\noc get clusteroperators\n# 2. Save (and then rotate) the kubeadmin credentials\ncat ocp-install/auth/kubeadmin-password\n\n\n\n\n\n\nThe kubeadmin account is a temporary bootstrap credential. As soon as you’ve wired up a real identity provider (OIDC, htpasswd, LDAP…) and granted cluster-admin to a real user, delete the kubeadmin secret:\noc delete secret kubeadmin -n kube-system\n\n\n\n\n\n\n\n\n\nWarningNever commit secrets\n\n\n\npullSecret and the contents of ~/.ssh/rhoai-demo are credentials. Add install-config.yaml, *.pem, and auth/ to your .gitignore before running the installer — the installer mutates this file and writes auth/kubeadmin-password and auth/kubeconfig next to it."
   },
   {
     "objectID": "posts/ocp-install/index.html#inside-the-openshift-web-console",
@@ -77,52 +119,10 @@
     "text": "Wrap-up\nIf you treat the script in this post as a starting point rather than a black box — pin versions, audit IAM, and review the install-config.yaml before each run — you’ll get a reproducible OpenShift install you actually understand.\n\n\n\n\n\n\nFound a sharp edge? Open an issue at josephassiga/josephassiga.github.io — I keep this post updated as the installer evolves."
   },
   {
-    "objectID": "about.html",
-    "href": "about.html",
-    "title": "About",
-    "section": "",
-    "text": "I write technical deep dives, architecture explorations, and honest product evaluations. Posts aim to go beyond tutorials: they explain why systems behave the way they do and when to choose one approach over another."
-  },
-  {
-    "objectID": "about.html#about-this-blog",
-    "href": "about.html#about-this-blog",
-    "title": "About",
-    "section": "",
-    "text": "I write technical deep dives, architecture explorations, and honest product evaluations. Posts aim to go beyond tutorials: they explain why systems behave the way they do and when to choose one approach over another."
-  },
-  {
-    "objectID": "about.html#about-me",
-    "href": "about.html#about-me",
-    "title": "About",
-    "section": "About me",
-    "text": "About me\nHi — I’m Joseph. I work with cloud platforms, distributed systems, and developer tools. I like explaining trade-offs, drawing architecture diagrams, and testing ideas with small prototypes."
-  },
-  {
-    "objectID": "about.html#connect",
-    "href": "about.html#connect",
-    "title": "About",
-    "section": "Connect",
-    "text": "Connect\nFind me on the links above. If you’d like to collaborate or share feedback, reach out on Twitter or GitHub."
-  },
-  {
     "objectID": "blog.html",
     "href": "blog.html",
     "title": "Blog",
     "section": "",
     "text": "Order By\n      Default\n      \n        Date - Oldest\n      \n      \n        Date - Newest\n      \n      \n        Title\n      \n    \n  \n    \n      \n      \n    \n\n\n\n\n\n\n\n\n\n\nInstalling Red Hat OpenShift AI Self-Managed 3.4(latest) in Red Hat Openshift 4.22(latest) on AWS: A Shell-Based Guide\n\n14 min\n\n\nopenshift\n\ncloud\n\naws\n\ndevops\n\nkubernetes\n\n\n\nA compact, annotated shell steps to install Red Hat Openshift AI on OpenShift 4.22 (latest version) on AWS - with a ready-to-edit install-config.yaml, sensible defaults, and…\n\n\n\nJun 10, 2026\n\n\n\n\n\n\nNo matching items"
-  },
-  {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "Technical Deep Dives & Product Explorations",
-    "section": "",
-    "text": "This site hosts long-form, practical analyses of cloud platforms, distributed systems, and developer tooling — focused on architecture, trade-offs, and real-world fit.\n\nRead the blog About me"
-  },
-  {
-    "objectID": "index.html#latest-posts",
-    "href": "index.html#latest-posts",
-    "title": "Technical Deep Dives & Product Explorations",
-    "section": "Latest posts",
-    "text": "Latest posts\n\n\n\n\n\n\n\n\n\n\nInstalling Red Hat OpenShift AI Self-Managed 3.4(latest) in Red Hat Openshift 4.22(latest) on AWS: A Shell-Based Guide\n\n14 min\n\n\nopenshift\n\ncloud\n\naws\n\ndevops\n\nkubernetes\n\n\n\nA compact, annotated shell steps to install Red Hat Openshift AI on OpenShift 4.22 (latest version) on AWS - with a ready-to-edit install-config.yaml, sensible defaults, and…\n\n\n\nJun 10, 2026\n\n\n\n\n\n\nNo matching items\n\n\nBrowse all posts →"
   }
 ]
