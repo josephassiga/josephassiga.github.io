@@ -538,14 +538,14 @@ background-color: null;
 font-style: inherit;">INFO</span>     export KUBECONFIG=/home/ec2-user/ocp-install/auth/kubeconfig</span>
 <span id="cb10-9"><span class="ex" style="color: null;
 background-color: null;
-font-style: inherit;">INFO</span> Access the OpenShift web-console here: https://console-openshift-console.apps.rhoai-demo.belowthestack.dev</span>
+font-style: inherit;">INFO</span> Access the OpenShift web-console here: https://console-openshift-console.apps.rhoai-demo.xxxx.dev</span>
 <span id="cb10-10"><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">INFO</span> Login to the console with user: <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"kubeadmin"</span>, and password: <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"UoGgI-T78I9-25QEz-DHaI3"</span></span>
+font-style: inherit;">"UoGgI-xxxx"</span></span>
 <span id="cb10-11"><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">INFO</span> Time elapsed: 29s</span></code></pre></div></div>
@@ -603,7 +603,7 @@ font-style: inherit;">-n</span> kube-system</span></code></pre></div></div>
 </section>
 <section id="inside-the-openshift-web-console" class="level2">
 <h2 class="anchored" data-anchor-id="inside-the-openshift-web-console">Inside the OpenShift web console</h2>
-<p>Browsing to the URL printed by the installer (<code>https://console-openshift-console.apps.rhoai-demo.belowthestack.dev</code>) and logging in with <code>kubeadmin</code> lands on the cluster <strong>Overview</strong>. This is the first place I check after every install — it confirms the control plane, operators, and Insights all came up green before any workloads are scheduled.</p>
+<p>Browsing to the URL printed by the installer (<code>https://console-openshift-console.apps.rhoai-demo.xxxx.dev</code>) and logging in with <code>kubeadmin</code> lands on the cluster <strong>Overview</strong>. This is the first place I check after every install — it confirms the control plane, operators, and Insights all came up green before any workloads are scheduled.</p>
 <div id="fig-ocp-console" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-ocp-console-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -618,7 +618,7 @@ Figure&nbsp;4: Red Hat OpenShift 4.22 web console — cluster Overview right aft
 <ul>
 <li><strong>Top banner</strong> — <em>“You are logged in as a temporary administrative user…”</em> is the cluster reminding you that <code>kubeadmin</code> is bootstrap-only and you should configure a real identity provider via <em>cluster OAuth</em>.</li>
 <li><strong>Status tiles</strong> — Control Plane, Operators, and Insights are all green. <em>Single control plane node</em> matches the <code>controlPlane.replicas: 1</code> lab topology from the install-config.</li>
-<li><strong>Details panel</strong> — confirms <code>OpenShift version: 4.22.0</code>, <code>Infrastructure provider: AWS</code>, and the cluster API endpoint <code>https://api.rhoai-demo.belowthestack.dev:6443</code> used by <code>oc</code>/<code>kubectl</code>.</li>
+<li><strong>Details panel</strong> — confirms <code>OpenShift version: 4.22.0</code>, <code>Infrastructure provider: AWS</code>, and the cluster API endpoint <code>https://api.rhoai-demo.xxxx.dev:6443</code> used by <code>oc</code>/<code>kubectl</code>.</li>
 <li><strong>AlertmanagerReceiversNotConfigured</strong> — expected on a fresh cluster. Wire up a receiver (PagerDuty, Slack, email…) before treating any workload as production.</li>
 </ul>
 <div class="callout callout-style-simple callout-tip">
