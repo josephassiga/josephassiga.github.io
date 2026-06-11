@@ -8,10 +8,10 @@
 
 <meta name="author" content="Joseph Assiga">
 <meta name="dcterms.date" content="2026-06-10">
-<meta name="keywords" content="OpenShift, RHAI, AWS, IPI, install-config, kubernetes, devops">
+<meta name="keywords" content="OpenShift, RHAI, AWS, IPI, install-config, kubernetes, devops, NVIDIA, AI, self-managed">
 <meta name="description" content="A compact, annotated shell steps to install Red Hat Openshift AI on OpenShift 4.22 (latest version) on AWS - with a ready-to-edit install-config.yaml, sensible defaults, and the trade-offs you should know before you press enter.">
 
-<title>Installing Red Hat OpenShift AI in Red Hat Openshift 4.22 on AWS: A Shell-Based Guide – Joseph Assiga</title>
+<title>Installing Red Hat OpenShift AI Self-Managed 3.4(latest) in Red Hat Openshift 4.22(latest) on AWS: A Shell-Based Guide – Joseph Assiga</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -113,12 +113,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <link rel="stylesheet" href="../../styles.css">
-<meta property="og:title" content="Installing Red Hat OpenShift AI in Red Hat Openshift 4.22 on AWS: A Shell-Based Guide – Joseph Assiga">
+<meta property="og:title" content="Installing Red Hat OpenShift AI Self-Managed 3.4(latest) in Red Hat Openshift 4.22(latest) on AWS: A Shell-Based Guide – Joseph Assiga">
 <meta property="og:description" content="A compact, annotated shell steps to install Red Hat Openshift AI on OpenShift 4.22 (latest version) on AWS - with a ready-to-edit install-config.yaml, sensible defaults, and the trade-offs you should know before you press enter.">
 <meta property="og:image" content="https://josephassiga.github.io//images/ocp-install.svg">
 <meta property="og:site_name" content="Joseph Assiga">
 <meta property="og:image:alt" content="OpenShift installation flow diagram">
-<meta name="twitter:title" content="Installing Red Hat OpenShift AI in Red Hat Openshift 4.22 on AWS: A Shell-Based Guide – Joseph Assiga">
+<meta name="twitter:title" content="Installing Red Hat OpenShift AI Self-Managed 3.4(latest) in Red Hat Openshift 4.22(latest) on AWS: A Shell-Based Guide – Joseph Assiga">
 <meta name="twitter:description" content="A compact, annotated shell steps to install Red Hat Openshift AI on OpenShift 4.22 (latest version) on AWS - with a ready-to-edit install-config.yaml, sensible defaults, and the trade-offs you should know before you press enter.">
 <meta name="twitter:image" content="https://josephassiga.github.io//images/ocp-install.svg">
 <meta name="twitter:image:alt" content="OpenShift installation flow diagram">
@@ -191,7 +191,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">Installing Red Hat OpenShift AI in Red Hat Openshift 4.22 on AWS: A Shell-Based Guide</h1>
+      <h1 class="title">Installing Red Hat OpenShift AI Self-Managed 3.4(latest) in Red Hat Openshift 4.22(latest) on AWS: A Shell-Based Guide</h1>
                   <div>
         <div class="description">
           <p>A compact, annotated shell steps to install Red Hat Openshift AI on OpenShift 4.22 (latest version) on AWS - with a ready-to-edit install-config.yaml, sensible defaults, and the trade-offs you should know before you press enter.</p>
@@ -244,7 +244,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <div>
     <div class="keywords">
       <div class="block-title">Keywords</div>
-      <p>OpenShift, RHAI, AWS, IPI, install-config, kubernetes, devops</p>
+      <p>OpenShift, RHAI, AWS, IPI, install-config, kubernetes, devops, NVIDIA, AI, self-managed</p>
     </div>
   </div>
   
@@ -270,6 +270,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </ul></li>
   <li><a href="#what-a-successful-install-looks-like" id="toc-what-a-successful-install-looks-like" class="nav-link" data-scroll-target="#what-a-successful-install-looks-like">What a successful install looks like</a></li>
   <li><a href="#inside-the-openshift-web-console" id="toc-inside-the-openshift-web-console" class="nav-link" data-scroll-target="#inside-the-openshift-web-console">Inside the OpenShift web console</a></li>
+  <li><a href="#installing-red-hat-openshift-ai-3.4" id="toc-installing-red-hat-openshift-ai-3.4" class="nav-link" data-scroll-target="#installing-red-hat-openshift-ai-3.4">Installing Red Hat OpenShift AI 3.4</a>
+  <ul class="collapse">
+  <li><a href="#install-the-prerequisite-operators" id="toc-install-the-prerequisite-operators" class="nav-link" data-scroll-target="#install-the-prerequisite-operators">1. Install the prerequisite operators</a></li>
+  <li><a href="#enable-gpus-node-feature-discovery-nvidia-gpu-operator" id="toc-enable-gpus-node-feature-discovery-nvidia-gpu-operator" class="nav-link" data-scroll-target="#enable-gpus-node-feature-discovery-nvidia-gpu-operator">2. Enable GPUs (Node Feature Discovery + NVIDIA GPU Operator)</a></li>
+  <li><a href="#install-the-red-hat-openshift-ai-operator" id="toc-install-the-red-hat-openshift-ai-operator" class="nav-link" data-scroll-target="#install-the-red-hat-openshift-ai-operator">3. Install the Red Hat OpenShift AI operator</a></li>
+  <li><a href="#bootstrap-the-platform-dscinitialization" id="toc-bootstrap-the-platform-dscinitialization" class="nav-link" data-scroll-target="#bootstrap-the-platform-dscinitialization">4. Bootstrap the platform — <code>DSCInitialization</code></a></li>
+  <li><a href="#enable-components-datasciencecluster" id="toc-enable-components-datasciencecluster" class="nav-link" data-scroll-target="#enable-components-datasciencecluster">5. Enable components — <code>DataScienceCluster</code></a></li>
+  <li><a href="#open-the-rhoai-dashboard" id="toc-open-the-rhoai-dashboard" class="nav-link" data-scroll-target="#open-the-rhoai-dashboard">6. Open the RHOAI dashboard</a></li>
+  </ul></li>
   <li><a href="#important-notes-best-practices" id="toc-important-notes-best-practices" class="nav-link" data-scroll-target="#important-notes-best-practices">Important notes &amp; best practices</a></li>
   <li><a href="#troubleshooting" id="toc-troubleshooting" class="nav-link" data-scroll-target="#troubleshooting">Troubleshooting</a></li>
   <li><a href="#wrap-up" id="toc-wrap-up" class="nav-link" data-scroll-target="#wrap-up">Wrap-up</a></li>
@@ -572,6 +581,347 @@ Figure&nbsp;4: Red Hat OpenShift 4.22 web console — cluster Overview right aft
 </div>
 </div>
 </div>
+</section>
+<section id="installing-red-hat-openshift-ai-3.4" class="level2">
+<h2 class="anchored" data-anchor-id="installing-red-hat-openshift-ai-3.4">Installing Red Hat OpenShift AI 3.4</h2>
+<p>With OpenShift 4.22 healthy, RHOAI installs as a stack of operators plus two custom resources — a <code>DSCInitialization</code> (one-time bootstrap) and a <code>DataScienceCluster</code> (the components you actually want enabled). The flow below uses the <strong>CLI</strong> end-to-end so it is scriptable and easy to re-run.</p>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>RHOAI 3.4 expects OpenShift <strong>4.16+</strong> and pulls in Authorino, Service Mesh, Serverless, and the Pipelines operators as dependencies. On a GPU-enabled worker pool (<code>g6.12xlarge</code> in this guide) you additionally want the <strong>Node Feature Discovery</strong> and <strong>NVIDIA GPU</strong> operators installed <em>before</em> the RHOAI operator.</p>
+</div>
+</div>
+</div>
+<section id="install-the-prerequisite-operators" class="level3">
+<h3 class="anchored" data-anchor-id="install-the-prerequisite-operators">1. Install the prerequisite operators</h3>
+<p>Each prerequisite below gets its <strong>own namespace</strong>, its <strong>own <code>OperatorGroup</code></strong>, and a pinned <code>Subscription</code>. This is more verbose than dropping everything into <code>openshift-operators</code>, but it makes each operator’s blast radius and upgrade lifecycle explicit — and gives you something concrete to delete if you ever want to uninstall one cleanly.</p>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>All four operators below ship in <strong>AllNamespaces</strong> install mode, so each <code>OperatorGroup</code> is created with an empty <code>spec</code> (no <code>targetNamespaces</code>). Save each manifest to a file and apply with <code>oc apply -f &lt;file&gt;</code>.</p>
+</div>
+</div>
+</div>
+<section id="red-hat-openshift-serverless" class="level4">
+<h4 class="anchored" data-anchor-id="red-hat-openshift-serverless">1.1 Red Hat OpenShift Serverless</h4>
+<p>Serverless (Knative) is what backs <strong>KServe</strong> model serving in RHOAI 3.4. Without it, the <code>kserve</code> component will refuse to come up healthy.</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>op-serverless.yaml</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14" data-filename="op-serverless.yaml"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb14-1"><a href="#cb14-1"></a><span class="pp">---</span></span>
+<span id="cb14-2"><a href="#cb14-2"></a><span class="fu">apiVersion</span><span class="kw">:</span><span class="at"> operators.coreos.com/v1alpha1</span></span>
+<span id="cb14-3"><a href="#cb14-3"></a><span class="fu">kind</span><span class="kw">:</span><span class="at"> Subscription</span></span>
+<span id="cb14-4"><a href="#cb14-4"></a><span class="fu">metadata</span><span class="kw">:</span></span>
+<span id="cb14-5"><a href="#cb14-5"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> serverless-operator</span></span>
+<span id="cb14-6"><a href="#cb14-6"></a><span class="at">  </span><span class="fu">namespace</span><span class="kw">:</span><span class="at"> openshift-serverless</span></span>
+<span id="cb14-7"><a href="#cb14-7"></a><span class="fu">spec</span><span class="kw">:</span></span>
+<span id="cb14-8"><a href="#cb14-8"></a><span class="at">  </span><span class="fu">channel</span><span class="kw">:</span><span class="at"> stable</span></span>
+<span id="cb14-9"><a href="#cb14-9"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> serverless-operator</span></span>
+<span id="cb14-10"><a href="#cb14-10"></a><span class="at">  </span><span class="fu">source</span><span class="kw">:</span><span class="at"> redhat-operators</span></span>
+<span id="cb14-11"><a href="#cb14-11"></a><span class="at">  </span><span class="fu">sourceNamespace</span><span class="kw">:</span><span class="at"> openshift-marketplace</span></span>
+<span id="cb14-12"><a href="#cb14-12"></a><span class="at">  </span><span class="fu">installPlanApproval</span><span class="kw">:</span><span class="at"> Automatic</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1"></a><span class="ex">oc</span> apply <span class="at">-f</span> op-serverless.yaml</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="red-hat-openshift-service-mesh" class="level4">
+<h4 class="anchored" data-anchor-id="red-hat-openshift-service-mesh">1.2 Red Hat OpenShift Service Mesh</h4>
+<p>Service Mesh (Istio) provides the ingress gateway and mTLS plumbing that KServe + the RHOAI dashboard sit behind.</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>op-servicemesh.yaml</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16" data-filename="op-servicemesh.yaml"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb16-1"><a href="#cb16-1"></a><span class="pp">---</span></span>
+<span id="cb16-2"><a href="#cb16-2"></a><span class="fu">apiVersion</span><span class="kw">:</span><span class="at"> operators.coreos.com/v1alpha1</span></span>
+<span id="cb16-3"><a href="#cb16-3"></a><span class="fu">kind</span><span class="kw">:</span><span class="at"> Subscription</span></span>
+<span id="cb16-4"><a href="#cb16-4"></a><span class="fu">metadata</span><span class="kw">:</span></span>
+<span id="cb16-5"><a href="#cb16-5"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> servicemeshoperator3</span></span>
+<span id="cb16-6"><a href="#cb16-6"></a><span class="at">  </span><span class="fu">namespace</span><span class="kw">:</span><span class="at"> openshift-operators</span></span>
+<span id="cb16-7"><a href="#cb16-7"></a><span class="fu">spec</span><span class="kw">:</span></span>
+<span id="cb16-8"><a href="#cb16-8"></a><span class="at">  </span><span class="fu">channel</span><span class="kw">:</span><span class="at"> stable</span></span>
+<span id="cb16-9"><a href="#cb16-9"></a><span class="at">  </span><span class="fu">installPlanApproval</span><span class="kw">:</span><span class="at"> Automatic</span></span>
+<span id="cb16-10"><a href="#cb16-10"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> servicemeshoperator3</span></span>
+<span id="cb16-11"><a href="#cb16-11"></a><span class="at">  </span><span class="fu">source</span><span class="kw">:</span><span class="at"> redhat-operators</span></span>
+<span id="cb16-12"><a href="#cb16-12"></a><span class="at">  </span><span class="fu">sourceNamespace</span><span class="kw">:</span><span class="at"> openshift-marketplace</span></span>
+<span id="cb16-13"><a href="#cb16-13"></a><span class="at">  </span><span class="fu">startingCSV</span><span class="kw">:</span><span class="at"> servicemeshoperator3.v3.3.3</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1"></a><span class="ex">oc</span> apply <span class="at">-f</span> op-servicemesh.yaml</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="red-hat-openshift-pipelines" class="level4">
+<h4 class="anchored" data-anchor-id="red-hat-openshift-pipelines">1.3 Red Hat OpenShift Pipelines</h4>
+<p>Pipelines (Tekton) is the engine behind RHOAI’s <strong>Data Science Pipelines</strong> component.</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>op-pipelines.yaml</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18" data-filename="op-pipelines.yaml"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb18-1"><a href="#cb18-1"></a><span class="pp">---</span></span>
+<span id="cb18-2"><a href="#cb18-2"></a><span class="fu">apiVersion</span><span class="kw">:</span><span class="at"> operators.coreos.com/v1alpha1</span></span>
+<span id="cb18-3"><a href="#cb18-3"></a><span class="fu">kind</span><span class="kw">:</span><span class="at"> Subscription</span></span>
+<span id="cb18-4"><a href="#cb18-4"></a><span class="fu">metadata</span><span class="kw">:</span></span>
+<span id="cb18-5"><a href="#cb18-5"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> openshift-pipelines-operator-rh</span></span>
+<span id="cb18-6"><a href="#cb18-6"></a><span class="at">  </span><span class="fu">namespace</span><span class="kw">:</span><span class="at"> openshift-operators</span></span>
+<span id="cb18-7"><a href="#cb18-7"></a><span class="fu">spec</span><span class="kw">:</span></span>
+<span id="cb18-8"><a href="#cb18-8"></a><span class="at">  </span><span class="fu">channel</span><span class="kw">:</span><span class="at"> latest</span></span>
+<span id="cb18-9"><a href="#cb18-9"></a><span class="at">  </span><span class="fu">installPlanApproval</span><span class="kw">:</span><span class="at"> Automatic</span></span>
+<span id="cb18-10"><a href="#cb18-10"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> openshift-pipelines-operator-rh</span></span>
+<span id="cb18-11"><a href="#cb18-11"></a><span class="at">  </span><span class="fu">source</span><span class="kw">:</span><span class="at"> redhat-operators</span></span>
+<span id="cb18-12"><a href="#cb18-12"></a><span class="at">  </span><span class="fu">sourceNamespace</span><span class="kw">:</span><span class="at"> openshift-marketplace</span></span>
+<span id="cb18-13"><a href="#cb18-13"></a><span class="at">  </span><span class="fu">startingCSV</span><span class="kw">:</span><span class="at"> openshift-pipelines-operator-rh.v1.22.2</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1"></a><span class="ex">oc</span> apply <span class="at">-f</span> op-pipelines.yaml</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="authorino" class="level4">
+<h4 class="anchored" data-anchor-id="authorino">1.4 Authorino</h4>
+<p>Authorino handles the auth layer in front of KServe inference endpoints.</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>op-authorino.yaml</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20" data-filename="op-authorino.yaml"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb20-1"><a href="#cb20-1"></a><span class="pp">---</span></span>
+<span id="cb20-2"><a href="#cb20-2"></a><span class="fu">apiVersion</span><span class="kw">:</span><span class="at"> operators.coreos.com/v1alpha1</span></span>
+<span id="cb20-3"><a href="#cb20-3"></a><span class="fu">kind</span><span class="kw">:</span><span class="at"> Subscription</span></span>
+<span id="cb20-4"><a href="#cb20-4"></a><span class="fu">metadata</span><span class="kw">:</span></span>
+<span id="cb20-5"><a href="#cb20-5"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> authorino-operator</span></span>
+<span id="cb20-6"><a href="#cb20-6"></a><span class="at">  </span><span class="fu">namespace</span><span class="kw">:</span><span class="at"> openshift-operators</span></span>
+<span id="cb20-7"><a href="#cb20-7"></a><span class="fu">spec</span><span class="kw">:</span></span>
+<span id="cb20-8"><a href="#cb20-8"></a><span class="at">  </span><span class="fu">channel</span><span class="kw">:</span><span class="at"> stable</span></span>
+<span id="cb20-9"><a href="#cb20-9"></a><span class="at">  </span><span class="fu">installPlanApproval</span><span class="kw">:</span><span class="at"> Automatic</span></span>
+<span id="cb20-10"><a href="#cb20-10"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> authorino-operator</span></span>
+<span id="cb20-11"><a href="#cb20-11"></a><span class="at">  </span><span class="fu">source</span><span class="kw">:</span><span class="at"> redhat-operators</span></span>
+<span id="cb20-12"><a href="#cb20-12"></a><span class="at">  </span><span class="fu">sourceNamespace</span><span class="kw">:</span><span class="at"> openshift-marketplace</span></span>
+<span id="cb20-13"><a href="#cb20-13"></a><span class="at">  </span><span class="fu">startingCSV</span><span class="kw">:</span><span class="at"> authorino-operator.v1.2.2</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1"></a><span class="ex">oc</span> apply <span class="at">-f</span> op-authorino.yaml</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="verify-all-four-prerequisites" class="level4">
+<h4 class="anchored" data-anchor-id="verify-all-four-prerequisites">1.5 Verify all four prerequisites</h4>
+<p>Watch every prerequisite CSV across the four namespaces. Every row should land on <code>Succeeded</code> (typically within 2–4 minutes):</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1"></a></span>
+<span id="cb22-2"><a href="#cb22-2"></a><span class="ex">[ec2-user@ip-172-31-27-222</span> ~]$  oc get csv <span class="at">-n</span> openshift-operators-redhat <span class="dt">\</span></span>
+<span id="cb22-3"><a href="#cb22-3"></a>    <span class="at">-o</span> custom-columns=NAME:.metadata.name,VERSION:.spec.version,PHASE:.status.phase</span>
+<span id="cb22-4"><a href="#cb22-4"></a><span class="ex">NAME</span>                                      VERSION   PHASE</span>
+<span id="cb22-5"><a href="#cb22-5"></a><span class="ex">authorino-operator.v1.2.2</span>                 1.2.2     Succeeded</span>
+<span id="cb22-6"><a href="#cb22-6"></a><span class="ex">openshift-pipelines-operator-rh.v1.22.2</span>   1.22.2    Succeeded</span>
+<span id="cb22-7"><a href="#cb22-7"></a><span class="ex">serverless-operator.v1.37.1</span>               1.37.1    Succeeded</span>
+<span id="cb22-8"><a href="#cb22-8"></a><span class="ex">servicemeshoperator3.v3.3.3</span>               3.3.3     Succeeded</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</section>
+<section id="enable-gpus-node-feature-discovery-nvidia-gpu-operator" class="level3">
+<h3 class="anchored" data-anchor-id="enable-gpus-node-feature-discovery-nvidia-gpu-operator">2. Enable GPUs (Node Feature Discovery + NVIDIA GPU Operator)</h3>
+<p>Skip this section on a CPU-only cluster. On a GPU worker pool, the NFD operator labels nodes that expose PCI GPU devices, and the NVIDIA GPU operator deploys the driver, container toolkit, and DCGM exporter.</p>
+<section id="node-feature-discovery" class="level4">
+<h4 class="anchored" data-anchor-id="node-feature-discovery">2.1 Node Feature Discovery</h4>
+<p>NFD ships in <strong>AllNamespaces</strong> install mode — empty <code>OperatorGroup</code> spec.</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>op-nfd.yaml</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23" data-filename="op-nfd.yaml"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb23-1"><a href="#cb23-1"></a><span class="pp">---</span></span>
+<span id="cb23-2"><a href="#cb23-2"></a><span class="fu">apiVersion</span><span class="kw">:</span><span class="at"> v1</span></span>
+<span id="cb23-3"><a href="#cb23-3"></a><span class="fu">kind</span><span class="kw">:</span><span class="at"> Namespace</span></span>
+<span id="cb23-4"><a href="#cb23-4"></a><span class="fu">metadata</span><span class="kw">:</span></span>
+<span id="cb23-5"><a href="#cb23-5"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> openshift-nfd</span></span>
+<span id="cb23-6"><a href="#cb23-6"></a><span class="pp">---</span></span>
+<span id="cb23-7"><a href="#cb23-7"></a><span class="fu">apiVersion</span><span class="kw">:</span><span class="at"> operators.coreos.com/v1</span></span>
+<span id="cb23-8"><a href="#cb23-8"></a><span class="fu">kind</span><span class="kw">:</span><span class="at"> OperatorGroup</span></span>
+<span id="cb23-9"><a href="#cb23-9"></a><span class="fu">metadata</span><span class="kw">:</span></span>
+<span id="cb23-10"><a href="#cb23-10"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> nfd-operators</span></span>
+<span id="cb23-11"><a href="#cb23-11"></a><span class="at">  </span><span class="fu">namespace</span><span class="kw">:</span><span class="at"> openshift-nfd</span></span>
+<span id="cb23-12"><a href="#cb23-12"></a><span class="fu">spec</span><span class="kw">:</span></span>
+<span id="cb23-13"><a href="#cb23-13"></a><span class="at">  </span><span class="fu">targetNamespaces</span><span class="kw">:</span></span>
+<span id="cb23-14"><a href="#cb23-14"></a><span class="at">    </span><span class="kw">-</span><span class="at"> openshift-nfd</span></span>
+<span id="cb23-15"><a href="#cb23-15"></a><span class="at">  </span><span class="fu">upgradeStrategy</span><span class="kw">:</span><span class="at"> Default</span></span>
+<span id="cb23-16"><a href="#cb23-16"></a><span class="pp">---</span></span>
+<span id="cb23-17"><a href="#cb23-17"></a><span class="fu">apiVersion</span><span class="kw">:</span><span class="at"> operators.coreos.com/v1alpha1</span></span>
+<span id="cb23-18"><a href="#cb23-18"></a><span class="fu">kind</span><span class="kw">:</span><span class="at"> Subscription</span></span>
+<span id="cb23-19"><a href="#cb23-19"></a><span class="fu">metadata</span><span class="kw">:</span></span>
+<span id="cb23-20"><a href="#cb23-20"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> nfd</span></span>
+<span id="cb23-21"><a href="#cb23-21"></a><span class="at">  </span><span class="fu">namespace</span><span class="kw">:</span><span class="at"> openshift-nfd</span></span>
+<span id="cb23-22"><a href="#cb23-22"></a><span class="fu">spec</span><span class="kw">:</span></span>
+<span id="cb23-23"><a href="#cb23-23"></a><span class="at">  </span><span class="fu">channel</span><span class="kw">:</span><span class="at"> stable</span></span>
+<span id="cb23-24"><a href="#cb23-24"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> nfd</span></span>
+<span id="cb23-25"><a href="#cb23-25"></a><span class="at">  </span><span class="fu">source</span><span class="kw">:</span><span class="at"> redhat-operators</span></span>
+<span id="cb23-26"><a href="#cb23-26"></a><span class="at">  </span><span class="fu">sourceNamespace</span><span class="kw">:</span><span class="at"> openshift-marketplace</span></span>
+<span id="cb23-27"><a href="#cb23-27"></a><span class="at">  </span><span class="fu">installPlanApproval</span><span class="kw">:</span><span class="at"> Automatic</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1"></a><span class="ex">oc</span> apply <span class="at">-f</span> op-nfd.yaml</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="nvidia-gpu-operator" class="level4">
+<h4 class="anchored" data-anchor-id="nvidia-gpu-operator">2.2 NVIDIA GPU Operator</h4>
+<p>The NVIDIA GPU operator ships in <strong>OwnNamespace</strong> install mode, so the <code>OperatorGroup</code> must list its own namespace under <code>targetNamespaces</code>.</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>op-nvidia-gpu.yaml</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25" data-filename="op-nvidia-gpu.yaml"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb25-1"><a href="#cb25-1"></a><span class="pp">---</span></span>
+<span id="cb25-2"><a href="#cb25-2"></a><span class="fu">apiVersion</span><span class="kw">:</span><span class="at"> v1</span></span>
+<span id="cb25-3"><a href="#cb25-3"></a><span class="fu">kind</span><span class="kw">:</span><span class="at"> Namespace</span></span>
+<span id="cb25-4"><a href="#cb25-4"></a><span class="fu">metadata</span><span class="kw">:</span></span>
+<span id="cb25-5"><a href="#cb25-5"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> nvidia-gpu-operator</span></span>
+<span id="cb25-6"><a href="#cb25-6"></a><span class="pp">---</span></span>
+<span id="cb25-7"><a href="#cb25-7"></a><span class="fu">apiVersion</span><span class="kw">:</span><span class="at"> operators.coreos.com/v1</span></span>
+<span id="cb25-8"><a href="#cb25-8"></a><span class="fu">kind</span><span class="kw">:</span><span class="at"> OperatorGroup</span></span>
+<span id="cb25-9"><a href="#cb25-9"></a><span class="fu">metadata</span><span class="kw">:</span></span>
+<span id="cb25-10"><a href="#cb25-10"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> nvidia-gpu-operators</span></span>
+<span id="cb25-11"><a href="#cb25-11"></a><span class="at">  </span><span class="fu">namespace</span><span class="kw">:</span><span class="at"> nvidia-gpu-operator</span></span>
+<span id="cb25-12"><a href="#cb25-12"></a><span class="fu">spec</span><span class="kw">:</span></span>
+<span id="cb25-13"><a href="#cb25-13"></a><span class="at">  </span><span class="fu">targetNamespaces</span><span class="kw">:</span></span>
+<span id="cb25-14"><a href="#cb25-14"></a><span class="at">    </span><span class="kw">-</span><span class="at"> nvidia-gpu-operator</span></span>
+<span id="cb25-15"><a href="#cb25-15"></a><span class="pp">---</span></span>
+<span id="cb25-16"><a href="#cb25-16"></a><span class="fu">apiVersion</span><span class="kw">:</span><span class="at"> operators.coreos.com/v1alpha1</span></span>
+<span id="cb25-17"><a href="#cb25-17"></a><span class="fu">kind</span><span class="kw">:</span><span class="at"> Subscription</span></span>
+<span id="cb25-18"><a href="#cb25-18"></a><span class="fu">metadata</span><span class="kw">:</span></span>
+<span id="cb25-19"><a href="#cb25-19"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> gpu-operator-certified</span></span>
+<span id="cb25-20"><a href="#cb25-20"></a><span class="at">  </span><span class="fu">namespace</span><span class="kw">:</span><span class="at"> nvidia-gpu-operator</span></span>
+<span id="cb25-21"><a href="#cb25-21"></a><span class="fu">spec</span><span class="kw">:</span></span>
+<span id="cb25-22"><a href="#cb25-22"></a><span class="at">  </span><span class="fu">channel</span><span class="kw">:</span><span class="at"> stable</span></span>
+<span id="cb25-23"><a href="#cb25-23"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> gpu-operator-certified</span></span>
+<span id="cb25-24"><a href="#cb25-24"></a><span class="at">  </span><span class="fu">source</span><span class="kw">:</span><span class="at"> certified-operators</span></span>
+<span id="cb25-25"><a href="#cb25-25"></a><span class="at">  </span><span class="fu">sourceNamespace</span><span class="kw">:</span><span class="at"> openshift-marketplace</span></span>
+<span id="cb25-26"><a href="#cb25-26"></a><span class="at">  </span><span class="fu">installPlanApproval</span><span class="kw">:</span><span class="at"> Automatic</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1"></a><span class="ex">oc</span> apply <span class="at">-f</span> op-nvidia-gpu.yaml</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="roll-out-the-gpu-driver-clusterpolicy" class="level4">
+<h4 class="anchored" data-anchor-id="roll-out-the-gpu-driver-clusterpolicy">2.3 Roll out the GPU driver — <code>ClusterPolicy</code></h4>
+<p>Once both CSVs reach <code>Succeeded</code>, apply NVIDIA’s default <code>ClusterPolicy</code> — the CR that actually rolls out the driver DaemonSet, container toolkit, and DCGM exporter onto every GPU-labeled node:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1"></a><span class="ex">oc</span> get clusterpolicy gpu-cluster-policy <span class="at">-o</span> yaml <span class="op">&gt;</span>/dev/null <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span> <span class="dt">\</span></span>
+<span id="cb27-2"><a href="#cb27-2"></a>  <span class="kw">||</span> <span class="ex">oc</span> apply <span class="at">-f</span> https://raw.githubusercontent.com/NVIDIA/gpu-operator/main/deployments/gpu-operator/values-openshift.yaml</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Verify a node now advertises <code>nvidia.com/gpu</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb28-1"><a href="#cb28-1"></a><span class="ex">oc</span> get nodes <span class="at">-o</span> json <span class="kw">|</span> <span class="ex">jq</span> <span class="st">'.items[].status.capacity["nvidia.com/gpu"]'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</section>
+<section id="install-the-red-hat-openshift-ai-operator" class="level3">
+<h3 class="anchored" data-anchor-id="install-the-red-hat-openshift-ai-operator">3. Install the Red Hat OpenShift AI operator</h3>
+<p>RHOAI lives in <code>redhat-ods-operator</code>. Create the namespace, an <code>OperatorGroup</code>, and a pinned <code>Subscription</code> for the <code>fast</code> channel (use <code>stable</code> for production).</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>rhoai-operator.sh</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29" data-filename="rhoai-operator.sh"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb29-1"><a href="#cb29-1"></a><span class="ex">oc</span> apply <span class="at">-f</span> <span class="at">-</span> <span class="op">&lt;&lt;'EOF'</span></span>
+<span id="cb29-2"><a href="#cb29-2"></a><span class="st">---</span></span>
+<span id="cb29-3"><a href="#cb29-3"></a><span class="st">apiVersion: v1</span></span>
+<span id="cb29-4"><a href="#cb29-4"></a><span class="st">kind: Namespace</span></span>
+<span id="cb29-5"><a href="#cb29-5"></a><span class="st">metadata:</span></span>
+<span id="cb29-6"><a href="#cb29-6"></a><span class="st">  name: redhat-ods-operator</span></span>
+<span id="cb29-7"><a href="#cb29-7"></a><span class="st">---</span></span>
+<span id="cb29-8"><a href="#cb29-8"></a><span class="st">apiVersion: operators.coreos.com/v1</span></span>
+<span id="cb29-9"><a href="#cb29-9"></a><span class="st">kind: OperatorGroup</span></span>
+<span id="cb29-10"><a href="#cb29-10"></a><span class="st">metadata:</span></span>
+<span id="cb29-11"><a href="#cb29-11"></a><span class="st">  name: rhods-operator</span></span>
+<span id="cb29-12"><a href="#cb29-12"></a><span class="st">  namespace: redhat-ods-operator</span></span>
+<span id="cb29-13"><a href="#cb29-13"></a><span class="st">---</span></span>
+<span id="cb29-14"><a href="#cb29-14"></a><span class="st">apiVersion: operators.coreos.com/v1alpha1</span></span>
+<span id="cb29-15"><a href="#cb29-15"></a><span class="st">kind: Subscription</span></span>
+<span id="cb29-16"><a href="#cb29-16"></a><span class="st">metadata:</span></span>
+<span id="cb29-17"><a href="#cb29-17"></a><span class="st">  name: rhods-operator</span></span>
+<span id="cb29-18"><a href="#cb29-18"></a><span class="st">  namespace: redhat-ods-operator</span></span>
+<span id="cb29-19"><a href="#cb29-19"></a><span class="st">spec:</span></span>
+<span id="cb29-20"><a href="#cb29-20"></a><span class="st">  channel: fast</span></span>
+<span id="cb29-21"><a href="#cb29-21"></a><span class="st">  name: rhods-operator</span></span>
+<span id="cb29-22"><a href="#cb29-22"></a><span class="st">  source: redhat-operators</span></span>
+<span id="cb29-23"><a href="#cb29-23"></a><span class="st">  sourceNamespace: openshift-marketplace</span></span>
+<span id="cb29-24"><a href="#cb29-24"></a><span class="st">  installPlanApproval: Automatic</span></span>
+<span id="cb29-25"><a href="#cb29-25"></a><span class="op">EOF</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Wait for the operator CSV:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb30-1"><a href="#cb30-1"></a><span class="ex">oc</span> get csv <span class="at">-n</span> redhat-ods-operator <span class="dt">\</span></span>
+<span id="cb30-2"><a href="#cb30-2"></a>  <span class="at">-o</span> custom-columns=NAME:.metadata.name,VERSION:.spec.version,PHASE:.status.phase</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>You’re looking for <code>rhods-operator.3.4.x</code> in <code>Succeeded</code>.</p>
+</section>
+<section id="bootstrap-the-platform-dscinitialization" class="level3">
+<h3 class="anchored" data-anchor-id="bootstrap-the-platform-dscinitialization">4. Bootstrap the platform — <code>DSCInitialization</code></h3>
+<p>The <code>DSCI</code> configures the Service Mesh, monitoring, and the <code>redhat-ods-applications</code> namespace that every RHOAI workload lives in. Apply once per cluster:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>dsci.yaml</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31" data-filename="dsci.yaml"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb31-1"><a href="#cb31-1"></a><span class="fu">apiVersion</span><span class="kw">:</span><span class="at"> dscinitialization.opendatahub.io/v1</span></span>
+<span id="cb31-2"><a href="#cb31-2"></a><span class="fu">kind</span><span class="kw">:</span><span class="at"> DSCInitialization</span></span>
+<span id="cb31-3"><a href="#cb31-3"></a><span class="fu">metadata</span><span class="kw">:</span></span>
+<span id="cb31-4"><a href="#cb31-4"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> default-dsci</span></span>
+<span id="cb31-5"><a href="#cb31-5"></a><span class="fu">spec</span><span class="kw">:</span></span>
+<span id="cb31-6"><a href="#cb31-6"></a><span class="at">  </span><span class="fu">applicationsNamespace</span><span class="kw">:</span><span class="at"> redhat-ods-applications</span></span>
+<span id="cb31-7"><a href="#cb31-7"></a><span class="at">  </span><span class="fu">monitoring</span><span class="kw">:</span></span>
+<span id="cb31-8"><a href="#cb31-8"></a><span class="at">    </span><span class="fu">managementState</span><span class="kw">:</span><span class="at"> Managed</span></span>
+<span id="cb31-9"><a href="#cb31-9"></a><span class="at">    </span><span class="fu">namespace</span><span class="kw">:</span><span class="at"> redhat-ods-monitoring</span></span>
+<span id="cb31-10"><a href="#cb31-10"></a><span class="at">  </span><span class="fu">serviceMesh</span><span class="kw">:</span></span>
+<span id="cb31-11"><a href="#cb31-11"></a><span class="at">    </span><span class="fu">managementState</span><span class="kw">:</span><span class="at"> Managed</span></span>
+<span id="cb31-12"><a href="#cb31-12"></a><span class="at">    </span><span class="fu">controlPlane</span><span class="kw">:</span></span>
+<span id="cb31-13"><a href="#cb31-13"></a><span class="at">      </span><span class="fu">name</span><span class="kw">:</span><span class="at"> data-science-smcp</span></span>
+<span id="cb31-14"><a href="#cb31-14"></a><span class="at">      </span><span class="fu">namespace</span><span class="kw">:</span><span class="at"> istio-system</span></span>
+<span id="cb31-15"><a href="#cb31-15"></a><span class="at">  </span><span class="fu">trustedCABundle</span><span class="kw">:</span></span>
+<span id="cb31-16"><a href="#cb31-16"></a><span class="at">    </span><span class="fu">managementState</span><span class="kw">:</span><span class="at"> Managed</span></span>
+<span id="cb31-17"><a href="#cb31-17"></a><span class="at">    </span><span class="fu">customCABundle</span><span class="kw">:</span><span class="at"> </span><span class="st">""</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb32-1"><a href="#cb32-1"></a><span class="ex">oc</span> apply <span class="at">-f</span> dsci.yaml</span>
+<span id="cb32-2"><a href="#cb32-2"></a><span class="ex">oc</span> get dscinitialization default-dsci <span class="at">-o</span> jsonpath=<span class="st">'{.status.phase}{"\n"}'</span></span>
+<span id="cb32-3"><a href="#cb32-3"></a><span class="co"># → Ready</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="enable-components-datasciencecluster" class="level3">
+<h3 class="anchored" data-anchor-id="enable-components-datasciencecluster">5. Enable components — <code>DataScienceCluster</code></h3>
+<p>This is the CR you’ll edit most often: it’s where you turn individual components on or off. The example below enables the full set used in a typical RHOAI demo (dashboard, workbenches, pipelines, model serving, training, Ray, Kueue).</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>dsc.yaml</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33" data-filename="dsc.yaml"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb33-1"><a href="#cb33-1"></a><span class="fu">apiVersion</span><span class="kw">:</span><span class="at"> datasciencecluster.opendatahub.io/v1</span></span>
+<span id="cb33-2"><a href="#cb33-2"></a><span class="fu">kind</span><span class="kw">:</span><span class="at"> DataScienceCluster</span></span>
+<span id="cb33-3"><a href="#cb33-3"></a><span class="fu">metadata</span><span class="kw">:</span></span>
+<span id="cb33-4"><a href="#cb33-4"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> default-dsc</span></span>
+<span id="cb33-5"><a href="#cb33-5"></a><span class="fu">spec</span><span class="kw">:</span></span>
+<span id="cb33-6"><a href="#cb33-6"></a><span class="at">  </span><span class="fu">components</span><span class="kw">:</span></span>
+<span id="cb33-7"><a href="#cb33-7"></a><span class="at">    </span><span class="fu">dashboard</span><span class="kw">:</span><span class="at">                </span><span class="kw">{</span><span class="at"> </span><span class="fu">managementState</span><span class="kw">:</span><span class="at"> Managed </span><span class="kw">}</span></span>
+<span id="cb33-8"><a href="#cb33-8"></a><span class="at">    </span><span class="fu">workbenches</span><span class="kw">:</span><span class="at">              </span><span class="kw">{</span><span class="at"> </span><span class="fu">managementState</span><span class="kw">:</span><span class="at"> Managed </span><span class="kw">}</span></span>
+<span id="cb33-9"><a href="#cb33-9"></a><span class="at">    </span><span class="fu">datasciencepipelines</span><span class="kw">:</span><span class="at">     </span><span class="kw">{</span><span class="at"> </span><span class="fu">managementState</span><span class="kw">:</span><span class="at"> Managed </span><span class="kw">}</span></span>
+<span id="cb33-10"><a href="#cb33-10"></a><span class="at">    </span><span class="fu">modelmeshserving</span><span class="kw">:</span><span class="at">         </span><span class="kw">{</span><span class="at"> </span><span class="fu">managementState</span><span class="kw">:</span><span class="at"> Managed </span><span class="kw">}</span></span>
+<span id="cb33-11"><a href="#cb33-11"></a><span class="at">    </span><span class="fu">kserve</span><span class="kw">:</span><span class="at">                   </span><span class="kw">{</span><span class="at"> </span><span class="fu">managementState</span><span class="kw">:</span><span class="at"> Managed </span><span class="kw">}</span></span>
+<span id="cb33-12"><a href="#cb33-12"></a><span class="at">    </span><span class="fu">kueue</span><span class="kw">:</span><span class="at">                    </span><span class="kw">{</span><span class="at"> </span><span class="fu">managementState</span><span class="kw">:</span><span class="at"> Managed </span><span class="kw">}</span></span>
+<span id="cb33-13"><a href="#cb33-13"></a><span class="at">    </span><span class="fu">ray</span><span class="kw">:</span><span class="at">                      </span><span class="kw">{</span><span class="at"> </span><span class="fu">managementState</span><span class="kw">:</span><span class="at"> Managed </span><span class="kw">}</span></span>
+<span id="cb33-14"><a href="#cb33-14"></a><span class="at">    </span><span class="fu">codeflare</span><span class="kw">:</span><span class="at">                </span><span class="kw">{</span><span class="at"> </span><span class="fu">managementState</span><span class="kw">:</span><span class="at"> Managed </span><span class="kw">}</span></span>
+<span id="cb33-15"><a href="#cb33-15"></a><span class="at">    </span><span class="fu">trainingoperator</span><span class="kw">:</span><span class="at">         </span><span class="kw">{</span><span class="at"> </span><span class="fu">managementState</span><span class="kw">:</span><span class="at"> Managed </span><span class="kw">}</span></span>
+<span id="cb33-16"><a href="#cb33-16"></a><span class="at">    </span><span class="fu">trustyai</span><span class="kw">:</span><span class="at">                 </span><span class="kw">{</span><span class="at"> </span><span class="fu">managementState</span><span class="kw">:</span><span class="at"> Managed </span><span class="kw">}</span></span>
+<span id="cb33-17"><a href="#cb33-17"></a><span class="at">    </span><span class="fu">modelregistry</span><span class="kw">:</span><span class="at">            </span><span class="kw">{</span><span class="at"> </span><span class="fu">managementState</span><span class="kw">:</span><span class="at"> Managed </span><span class="kw">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb34-1"><a href="#cb34-1"></a><span class="ex">oc</span> apply <span class="at">-f</span> dsc.yaml</span>
+<span id="cb34-2"><a href="#cb34-2"></a></span>
+<span id="cb34-3"><a href="#cb34-3"></a><span class="co"># Watch components come up</span></span>
+<span id="cb34-4"><a href="#cb34-4"></a><span class="ex">oc</span> get datasciencecluster default-dsc <span class="dt">\</span></span>
+<span id="cb34-5"><a href="#cb34-5"></a>  <span class="at">-o</span> jsonpath=<span class="st">'{range .status.conditions[*]}{.type}={.status}{"\n"}{end}'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-simple callout-tip">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>Start narrow — <code>dashboard</code>, <code>workbenches</code>, and <code>datasciencepipelines</code> is enough to take the platform for a spin. Flip components from <code>Removed</code> to <code>Managed</code> later by re-applying this CR.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="open-the-rhoai-dashboard" class="level3">
+<h3 class="anchored" data-anchor-id="open-the-rhoai-dashboard">6. Open the RHOAI dashboard</h3>
+<p>The operator publishes a Route in <code>redhat-ods-applications</code>. Print it and open it in your browser:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb35-1"><a href="#cb35-1"></a><span class="ex">oc</span> get route <span class="at">-n</span> redhat-ods-applications rhods-dashboard <span class="dt">\</span></span>
+<span id="cb35-2"><a href="#cb35-2"></a>  <span class="at">-o</span> jsonpath=<span class="st">'https://{.spec.host}{"\n"}'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Log in with the same <code>kubeadmin</code> you used for the OpenShift console — once RHOAI sees you have <code>cluster-admin</code>, the dashboard exposes <em>Settings → User management</em> where you can grant <code>data scientist</code> / <code>admin</code> roles to real users from your IdP.</p>
+<div class="callout callout-style-simple callout-warning">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p><strong>Don’t rely on <code>kubeadmin</code></strong> for RHOAI day-to-day. RHOAI ties workbench ownership and pipeline runs to the logged-in user — when you eventually delete the <code>kubeadmin</code> secret, anything created by it becomes orphaned. Add an IdP before sharing the cluster.</p>
+</div>
+</div>
+</div>
+</section>
 </section>
 <section id="important-notes-best-practices" class="level2">
 <h2 class="anchored" data-anchor-id="important-notes-best-practices">Important notes &amp; best practices</h2>
