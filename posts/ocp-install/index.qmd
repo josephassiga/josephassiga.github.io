@@ -248,8 +248,8 @@ INFO Checking to see if there is a route at openshift-console/console...
 INFO Install complete!
 INFO To access the cluster as the system:admin user when using 'oc', run
 INFO     export KUBECONFIG=/home/ec2-user/ocp-install/auth/kubeconfig
-INFO Access the OpenShift web-console here: https://console-openshift-console.apps.rhoai-demo.belowthestack.dev
-INFO Login to the console with user: "kubeadmin", and password: "UoGgI-T78I9-25QEz-DHaI3"
+INFO Access the OpenShift web-console here: https://console-openshift-console.apps.rhoai-demo.xxxx.dev
+INFO Login to the console with user: "kubeadmin", and password: "UoGgI-xxxx"
 INFO Time elapsed: 29s
 ```
 
@@ -289,7 +289,7 @@ running the installer — the installer mutates this file and writes
 ## Inside the OpenShift web console
 
 Browsing to the URL printed by the installer
-(`https://console-openshift-console.apps.rhoai-demo.belowthestack.dev`)
+(`https://console-openshift-console.apps.rhoai-demo.xxxx.dev`)
 and logging in with `kubeadmin` lands on the cluster **Overview**. This is
 the first place I check after every install — it confirms the control
 plane, operators, and Insights all came up green before any workloads
@@ -307,7 +307,7 @@ A few things worth noticing in @fig-ocp-console:
   topology from the install-config.
 - **Details panel** — confirms `OpenShift version: 4.22.0`,
   `Infrastructure provider: AWS`, and the cluster API endpoint
-  `https://api.rhoai-demo.belowthestack.dev:6443` used by `oc`/`kubectl`.
+  `https://api.rhoai-demo.xxxx.dev:6443` used by `oc`/`kubectl`.
 - **AlertmanagerReceiversNotConfigured** — expected on a fresh cluster.
   Wire up a receiver (PagerDuty, Slack, email…) before treating any
   workload as production.
