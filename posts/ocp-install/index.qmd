@@ -326,14 +326,6 @@ custom resources — a `DSCInitialization` (one-time bootstrap) and a
 `DataScienceCluster` (the components you actually want enabled). The flow
 below uses the **CLI** end-to-end so it is scriptable and easy to re-run.
 
-::: {.callout-note appearance="simple"}
-RHOAI 3.4 expects OpenShift **4.16+** and pulls in Authorino, Service Mesh,
-Serverless, and the Pipelines operators as dependencies. On a GPU-enabled
-worker pool (`g6.12xlarge` in this guide) you additionally want the
-**Node Feature Discovery** and **NVIDIA GPU** operators installed *before*
-the RHOAI operator.
-:::
-
 ### 1. Install the prerequisite operators
 
 Each prerequisite below gets its **own namespace**, its **own
@@ -509,6 +501,440 @@ serverless-operator.v1.37.1               1.37.1    Succeeded
 servicemeshoperator3.v3.3.3               3.3.3     Succeeded
 
 ```
+
+---
+
+The operators below are the **additional prerequisites RHOAI 3.x pulls in**
+on top of the classic four — distributed workloads (JobSet, LWS, Kueue),
+Gateway-API auth (Connectivity Link), autoscaling (CMA), networking
+(SR-IOV), the new observability stack (OTel, Tempo, COO), and accelerator
+support (IBM Spyre). Each follows the same `Namespace` + `OperatorGroup` +
+`Subscription` pattern as the first batch.
+
+::: {.callout-warning appearance="simple"}
+Package names and channels evolve between RHOAI releases. Before applying
+each manifest, sanity-check the package exists in your cluster's catalog:
+
+```bash
+oc get packagemanifests -n openshift-marketplace \
+  | grep -iE 'kueue|jobset|lws|kuadrant|spyre|opentelemetry|tempo|sriov|metrics-autoscaler|observability'
+```
+:::
+
+#### 1.7 Custom Metrics Autoscaler Operator
+
+OpenShift's KEDA-based autoscaler. RHOAI uses it to scale model-serving
+inference deployments off custom metrics (queue depth, GPU utilisation,
+request latency) instead of just CPU/memory.
+
+```{.yaml filename="op-custom-metrics-autoscaler.yaml"}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openshift-keda
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: keda-operators
+  namespace: openshift-keda
+spec: {}
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: openshift-custom-metrics-autoscaler-operator
+  namespace: openshift-keda
+spec:
+  channel: stable
+  name: openshift-custom-metrics-autoscaler-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  installPlanApproval: Automatic
+```
+
+```bash
+oc apply -f op-custom-metrics-autoscaler.yaml
+```
+
+#### 1.8 JobSet Operator
+
+Batch-style group scheduling for distributed training. RHOAI's Training
+Operator (PyTorchJob, RayJob, etc.) hands work off to JobSet so all
+workers come up together (gang scheduling) instead of straggling.
+
+```{.yaml filename="op-jobset.yaml"}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openshift-jobset-operator
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: jobset-operators
+  namespace: openshift-jobset-operator
+spec: {}
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: jobset-operator
+  namespace: openshift-jobset-operator
+spec:
+  channel: stable
+  name: jobset-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  installPlanApproval: Automatic
+```
+
+```bash
+oc apply -f op-jobset.yaml
+```
+
+#### 1.9 Leader Worker Set Operator
+
+LWS is the workload abstraction RHOAI uses for **multi-host inference** —
+splitting a single large model (Llama-405B, Granite-MoE) across multiple
+GPU nodes with one leader pod orchestrating N worker pods.
+
+```{.yaml filename="op-lws.yaml"}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openshift-lws-operator
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: lws-operators
+  namespace: openshift-lws-operator
+spec: {}
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: leader-worker-set-operator
+  namespace: openshift-lws-operator
+spec:
+  channel: stable
+  name: leader-worker-set-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  installPlanApproval: Automatic
+```
+
+```bash
+oc apply -f op-lws.yaml
+```
+
+#### 1.10 Kueue Operator (Red Hat Build of Kueue)
+
+Cluster-wide job queueing and quota management. RHOAI 3.x ties workbench
+and training-job admission to Kueue `ClusterQueue` / `LocalQueue` objects
+so GPU time is fairly shared across data-science teams.
+
+```{.yaml filename="op-kueue.yaml"}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openshift-kueue-operator
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: kueue-operators
+  namespace: openshift-kueue-operator
+spec: {}
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: kueue-operator
+  namespace: openshift-kueue-operator
+spec:
+  channel: stable
+  name: kueue-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  installPlanApproval: Automatic
+```
+
+```bash
+oc apply -f op-kueue.yaml
+```
+
+#### 1.11 Red Hat Connectivity Link Operator
+
+The productised name for Kuadrant — authn/authz, rate limiting, and DNS
+policy on top of the **Gateway API** ingress that RHOAI 3.x KServe uses
+in place of OpenShift Routes.
+
+```{.yaml filename="op-connectivity-link.yaml"}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: connectivity-link-operator
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: connectivity-link-operators
+  namespace: connectivity-link-operator
+spec: {}
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: kuadrant-operator
+  namespace: connectivity-link-operator
+spec:
+  channel: stable
+  name: kuadrant-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  installPlanApproval: Automatic
+```
+
+```bash
+oc apply -f op-connectivity-link.yaml
+```
+
+#### 1.12 SR-IOV Network Operator
+
+Single Root I/O Virtualisation lets pods bypass the kernel network stack
+and talk straight to a NIC virtual function — required for RDMA-capable
+nodes used in distributed training. Ships in **OwnNamespace** install
+mode in the **required** `openshift-sriov-network-operator` namespace.
+
+```{.yaml filename="op-sriov.yaml"}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openshift-sriov-network-operator
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: sriov-network-operators
+  namespace: openshift-sriov-network-operator
+spec:
+  targetNamespaces:
+    - openshift-sriov-network-operator
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: sriov-network-operator-subscription
+  namespace: openshift-sriov-network-operator
+spec:
+  channel: stable
+  name: sriov-network-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  installPlanApproval: Automatic
+```
+
+```bash
+oc apply -f op-sriov.yaml
+```
+
+::: {.callout-tip appearance="simple"}
+Skip this on a single-NIC AWS demo cluster (like the `g6.12xlarge`
+single-node topology in this guide) — SR-IOV is only useful when you
+have RDMA-capable NICs to pass through.
+:::
+
+#### 1.13 Red Hat build of OpenTelemetry
+
+Cluster-wide telemetry collection. RHOAI 3.x serves model traces, LLM
+prompt/response spans, and GPU metrics through OTel collectors before
+shipping them to Tempo and the cluster's monitoring stack.
+
+```{.yaml filename="op-opentelemetry.yaml"}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openshift-opentelemetry-operator
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: opentelemetry-operators
+  namespace: openshift-opentelemetry-operator
+spec: {}
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: opentelemetry-product
+  namespace: openshift-opentelemetry-operator
+spec:
+  channel: stable
+  name: opentelemetry-product
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  installPlanApproval: Automatic
+```
+
+```bash
+oc apply -f op-opentelemetry.yaml
+```
+
+#### 1.14 Tempo Operator
+
+Distributed-trace backend. Receives spans from OTel collectors (1.13)
+and persists them to object storage. This is what powers RHOAI's
+**model-serving trace** view.
+
+```{.yaml filename="op-tempo.yaml"}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openshift-tempo-operator
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: tempo-operators
+  namespace: openshift-tempo-operator
+spec: {}
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: tempo-product
+  namespace: openshift-tempo-operator
+spec:
+  channel: stable
+  name: tempo-product
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  installPlanApproval: Automatic
+```
+
+```bash
+oc apply -f op-tempo.yaml
+```
+
+::: {.callout-note appearance="simple"}
+Tempo needs object storage (S3, MinIO, ODF) before it can run. Create a
+`TempoStack` CR with `storage.secret` pointing at your S3 bucket after
+the operator CSV reaches `Succeeded`.
+:::
+
+#### 1.15 Cluster Observability Operator (COO)
+
+COO is the umbrella for OpenShift's "user-defined monitoring" — Perses
+dashboards, custom Prometheus stacks, and the UI plugin that surfaces
+Tempo traces in the OpenShift console. RHOAI's GPU and model-serving
+dashboards land here.
+
+```{.yaml filename="op-coo.yaml"}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openshift-cluster-observability-operator
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: cluster-observability-operators
+  namespace: openshift-cluster-observability-operator
+spec: {}
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: cluster-observability-operator
+  namespace: openshift-cluster-observability-operator
+spec:
+  channel: stable
+  name: cluster-observability-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  installPlanApproval: Automatic
+```
+
+```bash
+oc apply -f op-coo.yaml
+```
+
+#### 1.16 IBM Spyre Operator
+
+IBM's AI accelerator support for OpenShift. Skip this unless you actually
+have Spyre cards in your worker pool — installing the operator without
+the underlying hardware is harmless but pointless.
+
+```{.yaml filename="op-ibm-spyre.yaml"}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ibm-spyre-operator
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: ibm-spyre-operators
+  namespace: ibm-spyre-operator
+spec:
+  targetNamespaces:
+    - ibm-spyre-operator
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: ibm-spyre-operator
+  namespace: ibm-spyre-operator
+spec:
+  channel: stable
+  name: ibm-spyre-operator
+  source: certified-operators
+  sourceNamespace: openshift-marketplace
+  installPlanApproval: Automatic
+```
+
+```bash
+oc apply -f op-ibm-spyre.yaml
+```
+
+#### 1.17 Verify the RHOAI 3.x prerequisite batch
+
+Loop every namespace introduced above and confirm each CSV reached
+`Succeeded` before moving on to the RHOAI operator itself:
+
+```bash
+for ns in openshift-keda openshift-jobset-operator openshift-lws-operator \
+          openshift-kueue-operator connectivity-link-operator \
+          openshift-sriov-network-operator openshift-opentelemetry-operator \
+          openshift-tempo-operator openshift-cluster-observability-operator \
+          ibm-spyre-operator cert-manager-operator; do
+  echo "=== $ns ==="
+  oc get csv -n "$ns" \
+    -o custom-columns=NAME:.metadata.name,VERSION:.spec.version,PHASE:.status.phase \
+    2>/dev/null
+done
+```
+
+::: {.callout-warning appearance="simple"}
+If a namespace shows `No resources found`, the corresponding
+`Subscription` is stuck. Check it with
+`oc describe subscription -n <ns> <name>` and look at `status.conditions`
+— the most common cause is the catalog source not yet having indexed the
+package (rare for stable Red Hat operators) or an `OperatorGroup`
+install-mode mismatch (e.g. SR-IOV needs **OwnNamespace** scoping).
+:::
 
 ### 2. Enable GPUs (Node Feature Discovery + NVIDIA GPU Operator)
 
@@ -686,40 +1112,7 @@ spec:
 oc apply -f rhoai-operator.yaml
 ```
 
-
-### 4. Bootstrap the platform — `DSCInitialization`
-
-The `DSCI` configures the Service Mesh, monitoring, and the
-`redhat-ods-applications` namespace that every RHOAI workload lives in.
-Apply once per cluster:
-
-```{.yaml filename="dsci.yaml"}
-apiVersion: dscinitialization.opendatahub.io/v1
-kind: DSCInitialization
-metadata:
-  name: default-dsci
-spec:
-  applicationsNamespace: redhat-ods-applications
-  monitoring:
-    managementState: Managed
-    namespace: redhat-ods-monitoring
-  serviceMesh:
-    managementState: Managed
-    controlPlane:
-      name: data-science-smcp
-      namespace: istio-system
-  trustedCABundle:
-    managementState: Managed
-    customCABundle: ""
-```
-
-```bash
-oc apply -f dsci.yaml
-oc get dscinitialization default-dsci -o jsonpath='{.status.phase}{"\n"}'
-# → Ready
-```
-
-### 5. Enable components — `DataScienceCluster`
+### 4. Create components — `DataScienceCluster`
 
 This is the CR you'll edit most often: it's where you turn individual
 components on or off. The example below enables the full set used in a
@@ -727,23 +1120,41 @@ typical RHOAI demo (dashboard, workbenches, pipelines, model serving,
 training, Ray, Kueue).
 
 ```{.yaml filename="dsc.yaml"}
-apiVersion: datasciencecluster.opendatahub.io/v1
+apiVersion: datasciencecluster.opendatahub.io/v2
 kind: DataScienceCluster
 metadata:
   name: default-dsc
 spec:
   components:
-    dashboard:                { managementState: Managed }
-    workbenches:              { managementState: Managed }
-    datasciencepipelines:     { managementState: Managed }
-    modelmeshserving:         { managementState: Managed }
-    kserve:                   { managementState: Managed }
-    kueue:                    { managementState: Managed }
-    ray:                      { managementState: Managed }
-    codeflare:                { managementState: Managed }
-    trainingoperator:         { managementState: Managed }
-    trustyai:                 { managementState: Managed }
-    modelregistry:            { managementState: Managed }
+    aipipelines:
+      argoWorkflowsControllers:
+        managementState: Removed 
+      managementState: Removed
+    dashboard:
+      managementState: Removed
+    feastoperator:
+      managementState: Removed
+    kserve:
+      managementState: Removed
+    kueue:
+      defaultClusterQueueName: default
+      defaultLocalQueueName: default
+      managementState: Removed
+    llamastackoperator:
+      managementState: Removed
+    modelregistry:
+      managementState: Removed
+      registriesNamespace: rhoai-model-registries
+    ray:
+      managementState: Removed
+    trainingoperator:
+      managementState: Removed
+    trustyai:
+      managementState: Removed
+    workbenches:
+      managementState: Removed
+      workbenchNamespace: rhods-notebooks 
+
 ```
 
 ```bash
