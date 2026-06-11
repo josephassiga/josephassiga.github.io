@@ -486,24 +486,6 @@ RHOAI components have somewhere to ask for certificates. You can do this
 *after* the RHOAI install — KServe will pick it up when it's there.
 :::
 
-#### 1.6 Verify all four prerequisites
-
-Watch every prerequisite CSV across the four namespaces. Every row should
-land on `Succeeded` (typically within 2–4 minutes):
-
-```bash
-
-[ec2-user@ip-172-31-43-132 ~]$ oc get csv -n openshift-operators-redhat -o custom-columns=NAME:.metadata.name,VERSION:.spec.version,PHASE:.status.phase
-NAME                                      VERSION   PHASE
-authorino-operator.v1.4.0                 1.4.0     Succeeded
-openshift-pipelines-operator-rh.v1.22.2   1.22.2    Succeeded
-serverless-operator.v1.37.1               1.37.1    Succeeded
-servicemeshoperator3.v3.3.3               3.3.3     Succeeded
-
-```
-
----
-
 The operators below are the **additional prerequisites RHOAI 3.x pulls in**
 on top of the classic four — distributed workloads (JobSet, LWS, Kueue),
 Gateway-API auth (Connectivity Link), autoscaling (CMA), networking
@@ -521,7 +503,7 @@ oc get packagemanifests -n openshift-marketplace \
 ```
 :::
 
-#### 1.7 Custom Metrics Autoscaler Operator
+#### 1.6 Custom Metrics Autoscaler Operator
 
 OpenShift's KEDA-based autoscaler. RHOAI uses it to scale model-serving
 inference deployments off custom metrics (queue depth, GPU utilisation,
@@ -558,7 +540,7 @@ spec:
 oc apply -f op-custom-metrics-autoscaler.yaml
 ```
 
-#### 1.8 JobSet Operator
+#### 1.7 JobSet Operator
 
 Batch-style group scheduling for distributed training. RHOAI's Training
 Operator (PyTorchJob, RayJob, etc.) hands work off to JobSet so all
@@ -595,7 +577,7 @@ spec:
 oc apply -f op-jobset.yaml
 ```
 
-#### 1.9 Leader Worker Set Operator
+#### 1.8 Leader Worker Set Operator
 
 LWS is the workload abstraction RHOAI uses for **multi-host inference** —
 splitting a single large model (Llama-405B, Granite-MoE) across multiple
@@ -632,7 +614,7 @@ spec:
 oc apply -f op-lws.yaml
 ```
 
-#### 1.10 Kueue Operator (Red Hat Build of Kueue)
+#### 1.9 Kueue Operator (Red Hat Build of Kueue)
 
 Cluster-wide job queueing and quota management. RHOAI 3.x ties workbench
 and training-job admission to Kueue `ClusterQueue` / `LocalQueue` objects
@@ -669,7 +651,7 @@ spec:
 oc apply -f op-kueue.yaml
 ```
 
-#### 1.11 Red Hat Connectivity Link Operator
+#### 1.10 Red Hat Connectivity Link Operator
 
 The productised name for Kuadrant — authn/authz, rate limiting, and DNS
 policy on top of the **Gateway API** ingress that RHOAI 3.x KServe uses
@@ -706,7 +688,7 @@ spec:
 oc apply -f op-connectivity-link.yaml
 ```
 
-#### 1.12 SR-IOV Network Operator
+#### 1.11 SR-IOV Network Operator
 
 Single Root I/O Virtualisation lets pods bypass the kernel network stack
 and talk straight to a NIC virtual function — required for RDMA-capable
@@ -752,7 +734,7 @@ single-node topology in this guide) — SR-IOV is only useful when you
 have RDMA-capable NICs to pass through.
 :::
 
-#### 1.13 Red Hat build of OpenTelemetry
+#### 1.12 Red Hat build of OpenTelemetry
 
 Cluster-wide telemetry collection. RHOAI 3.x serves model traces, LLM
 prompt/response spans, and GPU metrics through OTel collectors before
@@ -789,7 +771,7 @@ spec:
 oc apply -f op-opentelemetry.yaml
 ```
 
-#### 1.14 Tempo Operator
+#### 1.13 Tempo Operator
 
 Distributed-trace backend. Receives spans from OTel collectors (1.13)
 and persists them to object storage. This is what powers RHOAI's
@@ -832,7 +814,7 @@ Tempo needs object storage (S3, MinIO, ODF) before it can run. Create a
 the operator CSV reaches `Succeeded`.
 :::
 
-#### 1.15 Cluster Observability Operator (COO)
+#### 1.14 Cluster Observability Operator (COO)
 
 COO is the umbrella for OpenShift's "user-defined monitoring" — Perses
 dashboards, custom Prometheus stacks, and the UI plugin that surfaces
@@ -870,7 +852,7 @@ spec:
 oc apply -f op-coo.yaml
 ```
 
-#### 1.16 IBM Spyre Operator
+#### 1.15 IBM Spyre Operator
 
 IBM's AI accelerator support for OpenShift. Skip this unless you actually
 have Spyre cards in your worker pool — installing the operator without
@@ -909,7 +891,7 @@ spec:
 oc apply -f op-ibm-spyre.yaml
 ```
 
-#### 1.17 Verify the RHOAI 3.x prerequisite batch
+#### 1.16 Verify the RHOAI 3.x prerequisite batch
 
 Loop every namespace introduced above and confirm each CSV reached
 `Succeeded` before moving on to the RHOAI operator itself:
