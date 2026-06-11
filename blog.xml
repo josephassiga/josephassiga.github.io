@@ -1408,6 +1408,16 @@ background-color: null;
 font-style: inherit;">oc</span> apply <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">-f</span> op-nfd.yaml</span></code></pre></div></div>
+<div class="callout callout-style-simple callout-tip">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>Leave the default name and settings, and click Create <code>NodeFeatureDiscovery</code></p>
+</div>
+</div>
+</div>
 </section>
 <section id="nvidia-gpu-operator" class="level4">
 <h4 class="anchored" data-anchor-id="nvidia-gpu-operator">2.2 NVIDIA GPU Operator</h4>
@@ -1628,43 +1638,17 @@ font-style: inherit;">-f</span> op-nvidia-gpu.yaml</span></code></pre></div></di
 </section>
 <section id="roll-out-the-gpu-driver-clusterpolicy" class="level4">
 <h4 class="anchored" data-anchor-id="roll-out-the-gpu-driver-clusterpolicy">2.3 Roll out the GPU driver — <code>ClusterPolicy</code></h4>
-<p>Once both CSVs reach <code>Succeeded</code>, apply NVIDIA’s default <code>ClusterPolicy</code> — the CR that actually rolls out the driver DaemonSet, container toolkit, and DCGM exporter onto every GPU-labeled node:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb27-1"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">oc</span> get clusterpolicy gpu-cluster-policy <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">-o</span> yaml <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">&gt;</span>/dev/null <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">2</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">&gt;&amp;</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span> <span class="dt" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">\</span></span>
-<span id="cb27-2">  <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">||</span> <span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">oc</span> apply <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">-f</span> https://raw.githubusercontent.com/NVIDIA/gpu-operator/main/deployments/gpu-operator/values-openshift.yaml</span></code></pre></div></div>
-<p>Verify a node now advertises <code>nvidia.com/gpu</code>:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb28-1"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">oc</span> get nodes <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">-o</span> json <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">|</span> <span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">jq</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'.items[].status.capacity["nvidia.com/gpu"]'</span></span></code></pre></div></div>
+<p>Once both CSVs reach <code>Succeeded</code>, you create a <code>ClusterPolicy</code> — the CR that actually rolls out the driver DaemonSet, container toolkit, and DCGM exporter onto every GPU-labeled node.</p>
+<div class="callout callout-style-simple callout-tip">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>Leave the default name and settings, and click Create <code>ClusterPolicy</code> and wait for 15 to 20 minutes for the driver to roll out.</p>
+</div>
+</div>
+</div>
 </section>
 </section>
 <section id="install-the-red-hat-openshift-ai-operator" class="level3">
@@ -1674,7 +1658,7 @@ font-style: inherit;">'.items[].status.capacity["nvidia.com/gpu"]'</span></span>
 <div class="code-with-filename-file">
 <pre><strong>rhoai-operator.sh</strong></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29" data-filename="rhoai-operator.sh" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb29-1"><span class="ex" style="color: null;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27" data-filename="rhoai-operator.sh" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb27-1"><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">oc</span> apply <span class="at" style="color: #657422;
 background-color: null;
@@ -1683,88 +1667,88 @@ background-color: null;
 font-style: inherit;">-</span> <span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">&lt;&lt;'EOF'</span></span>
-<span id="cb29-2"><span class="st" style="color: #20794D;
+<span id="cb27-2"><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">---</span></span>
-<span id="cb29-3"><span class="st" style="color: #20794D;
+<span id="cb27-3"><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">apiVersion: v1</span></span>
-<span id="cb29-4"><span class="st" style="color: #20794D;
+<span id="cb27-4"><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">kind: Namespace</span></span>
-<span id="cb29-5"><span class="st" style="color: #20794D;
+<span id="cb27-5"><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">metadata:</span></span>
-<span id="cb29-6"><span class="st" style="color: #20794D;
+<span id="cb27-6"><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">  name: redhat-ods-operator</span></span>
-<span id="cb29-7"><span class="st" style="color: #20794D;
+<span id="cb27-7"><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">---</span></span>
-<span id="cb29-8"><span class="st" style="color: #20794D;
+<span id="cb27-8"><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">apiVersion: operators.coreos.com/v1</span></span>
-<span id="cb29-9"><span class="st" style="color: #20794D;
+<span id="cb27-9"><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">kind: OperatorGroup</span></span>
-<span id="cb29-10"><span class="st" style="color: #20794D;
+<span id="cb27-10"><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">metadata:</span></span>
-<span id="cb29-11"><span class="st" style="color: #20794D;
+<span id="cb27-11"><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">  name: rhods-operator</span></span>
-<span id="cb29-12"><span class="st" style="color: #20794D;
+<span id="cb27-12"><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">  namespace: redhat-ods-operator</span></span>
-<span id="cb29-13"><span class="st" style="color: #20794D;
+<span id="cb27-13"><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">---</span></span>
-<span id="cb29-14"><span class="st" style="color: #20794D;
+<span id="cb27-14"><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">apiVersion: operators.coreos.com/v1alpha1</span></span>
-<span id="cb29-15"><span class="st" style="color: #20794D;
+<span id="cb27-15"><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">kind: Subscription</span></span>
-<span id="cb29-16"><span class="st" style="color: #20794D;
+<span id="cb27-16"><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">metadata:</span></span>
-<span id="cb29-17"><span class="st" style="color: #20794D;
+<span id="cb27-17"><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">  name: rhods-operator</span></span>
-<span id="cb29-18"><span class="st" style="color: #20794D;
+<span id="cb27-18"><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">  namespace: redhat-ods-operator</span></span>
-<span id="cb29-19"><span class="st" style="color: #20794D;
+<span id="cb27-19"><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">spec:</span></span>
-<span id="cb29-20"><span class="st" style="color: #20794D;
+<span id="cb27-20"><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">  channel: fast</span></span>
-<span id="cb29-21"><span class="st" style="color: #20794D;
+<span id="cb27-21"><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">  name: rhods-operator</span></span>
-<span id="cb29-22"><span class="st" style="color: #20794D;
+<span id="cb27-22"><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">  source: redhat-operators</span></span>
-<span id="cb29-23"><span class="st" style="color: #20794D;
+<span id="cb27-23"><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">  sourceNamespace: openshift-marketplace</span></span>
-<span id="cb29-24"><span class="st" style="color: #20794D;
+<span id="cb27-24"><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">  installPlanApproval: Automatic</span></span>
-<span id="cb29-25"><span class="op" style="color: #5E5E5E;
+<span id="cb27-25"><span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">EOF</span></span></code></pre></div></div>
 </div>
 <p>Wait for the operator CSV:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb30-1"><span class="ex" style="color: null;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb28-1"><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">oc</span> get csv <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">-n</span> redhat-ods-operator <span class="dt" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">\</span></span>
-<span id="cb30-2">  <span class="at" style="color: #657422;
+<span id="cb28-2">  <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">-o</span> custom-columns=NAME:.metadata.name,VERSION:.spec.version,PHASE:.status.phase</span></code></pre></div></div>
 <p>You’re looking for <code>rhods-operator.3.4.x</code> in <code>Succeeded</code>.</p>
@@ -1776,7 +1760,7 @@ font-style: inherit;">-o</span> custom-columns=NAME:.metadata.name,VERSION:.spec
 <div class="code-with-filename-file">
 <pre><strong>dsci.yaml</strong></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31" data-filename="dsci.yaml" style="background: #f1f3f5;"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb31-1"><span class="fu" style="color: #4758AB;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29" data-filename="dsci.yaml" style="background: #f1f3f5;"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb29-1"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">apiVersion</span><span class="kw" style="color: #003B4F;
 background-color: null;
@@ -1784,7 +1768,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> dscinitialization.opendatahub.io/v1</span></span>
-<span id="cb31-2"><span class="fu" style="color: #4758AB;
+<span id="cb29-2"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">kind</span><span class="kw" style="color: #003B4F;
 background-color: null;
@@ -1792,6 +1776,182 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> DSCInitialization</span></span>
+<span id="cb29-3"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">metadata</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb29-4"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> default-dsci</span></span>
+<span id="cb29-5"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">spec</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb29-6"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">applicationsNamespace</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> redhat-ods-applications</span></span>
+<span id="cb29-7"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">monitoring</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb29-8"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">managementState</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> Managed</span></span>
+<span id="cb29-9"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">namespace</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> redhat-ods-monitoring</span></span>
+<span id="cb29-10"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">serviceMesh</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb29-11"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">managementState</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> Managed</span></span>
+<span id="cb29-12"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">controlPlane</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb29-13"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> data-science-smcp</span></span>
+<span id="cb29-14"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">namespace</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> istio-system</span></span>
+<span id="cb29-15"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">trustedCABundle</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb29-16"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">managementState</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> Managed</span></span>
+<span id="cb29-17"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">customCABundle</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">""</span></span></code></pre></div></div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb30-1"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">oc</span> apply <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-f</span> dsci.yaml</span>
+<span id="cb30-2"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">oc</span> get dscinitialization default-dsci <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-o</span> jsonpath=<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'{.status.phase}{"\n"}'</span></span>
+<span id="cb30-3"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># → Ready</span></span></code></pre></div></div>
+</section>
+<section id="enable-components-datasciencecluster" class="level3">
+<h3 class="anchored" data-anchor-id="enable-components-datasciencecluster">5. Enable components — <code>DataScienceCluster</code></h3>
+<p>This is the CR you’ll edit most often: it’s where you turn individual components on or off. The example below enables the full set used in a typical RHOAI demo (dashboard, workbenches, pipelines, model serving, training, Ray, Kueue).</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>dsc.yaml</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31" data-filename="dsc.yaml" style="background: #f1f3f5;"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb31-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">apiVersion</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> datasciencecluster.opendatahub.io/v1</span></span>
+<span id="cb31-2"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">kind</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> DataScienceCluster</span></span>
 <span id="cb31-3"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">metadata</span><span class="kw" style="color: #003B4F;
@@ -1807,7 +1967,7 @@ background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;"> default-dsci</span></span>
+font-style: inherit;"> default-dsc</span></span>
 <span id="cb31-5"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">spec</span><span class="kw" style="color: #003B4F;
@@ -1818,187 +1978,11 @@ font-style: inherit;">:</span></span>
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
-font-style: inherit;">applicationsNamespace</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> redhat-ods-applications</span></span>
-<span id="cb31-7"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">monitoring</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span></span>
-<span id="cb31-8"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">managementState</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> Managed</span></span>
-<span id="cb31-9"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">namespace</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> redhat-ods-monitoring</span></span>
-<span id="cb31-10"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">serviceMesh</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span></span>
-<span id="cb31-11"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">managementState</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> Managed</span></span>
-<span id="cb31-12"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">controlPlane</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span></span>
-<span id="cb31-13"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> data-science-smcp</span></span>
-<span id="cb31-14"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">namespace</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> istio-system</span></span>
-<span id="cb31-15"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">trustedCABundle</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span></span>
-<span id="cb31-16"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">managementState</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> Managed</span></span>
-<span id="cb31-17"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">customCABundle</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> </span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">""</span></span></code></pre></div></div>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb32-1"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">oc</span> apply <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">-f</span> dsci.yaml</span>
-<span id="cb32-2"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">oc</span> get dscinitialization default-dsci <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">-o</span> jsonpath=<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'{.status.phase}{"\n"}'</span></span>
-<span id="cb32-3"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># → Ready</span></span></code></pre></div></div>
-</section>
-<section id="enable-components-datasciencecluster" class="level3">
-<h3 class="anchored" data-anchor-id="enable-components-datasciencecluster">5. Enable components — <code>DataScienceCluster</code></h3>
-<p>This is the CR you’ll edit most often: it’s where you turn individual components on or off. The example below enables the full set used in a typical RHOAI demo (dashboard, workbenches, pipelines, model serving, training, Ray, Kueue).</p>
-<div class="code-with-filename">
-<div class="code-with-filename-file">
-<pre><strong>dsc.yaml</strong></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33" data-filename="dsc.yaml" style="background: #f1f3f5;"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb33-1"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">apiVersion</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> datasciencecluster.opendatahub.io/v1</span></span>
-<span id="cb33-2"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">kind</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> DataScienceCluster</span></span>
-<span id="cb33-3"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">metadata</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span></span>
-<span id="cb33-4"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> default-dsc</span></span>
-<span id="cb33-5"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">spec</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span></span>
-<span id="cb33-6"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
-background-color: null;
 font-style: inherit;">components</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb33-7"><span class="at" style="color: #657422;
+<span id="cb31-7"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -2023,7 +2007,7 @@ font-style: inherit;"> Managed </span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">}</span></span>
-<span id="cb33-8"><span class="at" style="color: #657422;
+<span id="cb31-8"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -2048,7 +2032,7 @@ font-style: inherit;"> Managed </span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">}</span></span>
-<span id="cb33-9"><span class="at" style="color: #657422;
+<span id="cb31-9"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -2073,7 +2057,7 @@ font-style: inherit;"> Managed </span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">}</span></span>
-<span id="cb33-10"><span class="at" style="color: #657422;
+<span id="cb31-10"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -2098,7 +2082,7 @@ font-style: inherit;"> Managed </span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">}</span></span>
-<span id="cb33-11"><span class="at" style="color: #657422;
+<span id="cb31-11"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -2123,7 +2107,7 @@ font-style: inherit;"> Managed </span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">}</span></span>
-<span id="cb33-12"><span class="at" style="color: #657422;
+<span id="cb31-12"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -2148,7 +2132,7 @@ font-style: inherit;"> Managed </span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">}</span></span>
-<span id="cb33-13"><span class="at" style="color: #657422;
+<span id="cb31-13"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -2173,7 +2157,7 @@ font-style: inherit;"> Managed </span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">}</span></span>
-<span id="cb33-14"><span class="at" style="color: #657422;
+<span id="cb31-14"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -2198,7 +2182,7 @@ font-style: inherit;"> Managed </span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">}</span></span>
-<span id="cb33-15"><span class="at" style="color: #657422;
+<span id="cb31-15"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -2223,7 +2207,7 @@ font-style: inherit;"> Managed </span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">}</span></span>
-<span id="cb33-16"><span class="at" style="color: #657422;
+<span id="cb31-16"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -2248,7 +2232,7 @@ font-style: inherit;"> Managed </span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">}</span></span>
-<span id="cb33-17"><span class="at" style="color: #657422;
+<span id="cb31-17"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -2274,21 +2258,21 @@ background-color: null;
 font-weight: bold;
 font-style: inherit;">}</span></span></code></pre></div></div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb34-1"><span class="ex" style="color: null;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb32-1"><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">oc</span> apply <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">-f</span> dsc.yaml</span>
-<span id="cb34-2"></span>
-<span id="cb34-3"><span class="co" style="color: #5E5E5E;
+<span id="cb32-2"></span>
+<span id="cb32-3"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># Watch components come up</span></span>
-<span id="cb34-4"><span class="ex" style="color: null;
+<span id="cb32-4"><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">oc</span> get datasciencecluster default-dsc <span class="dt" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">\</span></span>
-<span id="cb34-5">  <span class="at" style="color: #657422;
+<span id="cb32-5">  <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">-o</span> jsonpath=<span class="st" style="color: #20794D;
 background-color: null;
@@ -2307,14 +2291,14 @@ font-style: inherit;">'{range .status.conditions[*]}{.type}={.status}{"\n"}{end}
 <section id="open-the-rhoai-dashboard" class="level3">
 <h3 class="anchored" data-anchor-id="open-the-rhoai-dashboard">6. Open the RHOAI dashboard</h3>
 <p>The operator publishes a Route in <code>redhat-ods-applications</code>. Print it and open it in your browser:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb35-1"><span class="ex" style="color: null;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb33-1"><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">oc</span> get route <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">-n</span> redhat-ods-applications rhods-dashboard <span class="dt" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">\</span></span>
-<span id="cb35-2">  <span class="at" style="color: #657422;
+<span id="cb33-2">  <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">-o</span> jsonpath=<span class="st" style="color: #20794D;
 background-color: null;
