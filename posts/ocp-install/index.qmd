@@ -1,5 +1,5 @@
 ---
-title: "Installing Red Hat OpenShift AI in Red Hat Openshift 4.22 on AWS: A Shell-Based Guide"
+title: "Installing Red Hat OpenShift AI Self-Managed 3.4(latest) in Red Hat Openshift 4.22(latest) on AWS: A Shell-Based Guide"
 description: |
   A compact, annotated shell steps to install Red Hat Openshift AI on OpenShift 4.22 (latest version) on AWS - with a
   ready-to-edit install-config.yaml, sensible defaults, and the trade-offs you
@@ -13,7 +13,7 @@ date-modified: 2026-06-10
 categories: [openshift, cloud, aws, devops, kubernetes]
 image: /images/ocp-install.svg
 image-alt: "OpenShift installation flow diagram"
-keywords: [OpenShift, RHAI, AWS, IPI, install-config, kubernetes, devops]
+keywords: [OpenShift, RHAI, AWS, IPI, install-config, kubernetes, devops,NVIDIA, AI, self-managed]
 format:
   html:
     toc: true
@@ -317,6 +317,387 @@ The console's *Getting started resources* panel ("Add identity
 providers", "Configure alert receivers", "Take console tour") is a
 sensible day-0 checklist — work through it before installing the
 RHOAI operator on top.
+:::
+
+## Installing Red Hat OpenShift AI 3.4
+
+With OpenShift 4.22 healthy, RHOAI installs as a stack of operators plus two
+custom resources — a `DSCInitialization` (one-time bootstrap) and a
+`DataScienceCluster` (the components you actually want enabled). The flow
+below uses the **CLI** end-to-end so it is scriptable and easy to re-run.
+
+::: {.callout-note appearance="simple"}
+RHOAI 3.4 expects OpenShift **4.16+** and pulls in Authorino, Service Mesh,
+Serverless, and the Pipelines operators as dependencies. On a GPU-enabled
+worker pool (`g6.12xlarge` in this guide) you additionally want the
+**Node Feature Discovery** and **NVIDIA GPU** operators installed *before*
+the RHOAI operator.
+:::
+
+### 1. Install the prerequisite operators
+
+Each prerequisite below gets its **own namespace**, its **own
+`OperatorGroup`**, and a pinned `Subscription`. This is more verbose than
+dropping everything into `openshift-operators`, but it makes each
+operator's blast radius and upgrade lifecycle explicit — and gives you
+something concrete to delete if you ever want to uninstall one cleanly.
+
+::: {.callout-note appearance="simple"}
+All four operators below ship in **AllNamespaces** install mode, so each
+`OperatorGroup` is created with an empty `spec` (no `targetNamespaces`).
+Save each manifest to a file and apply with `oc apply -f <file>`.
+:::
+
+#### 1.1 Red Hat OpenShift Serverless
+
+Serverless (Knative) is what backs **KServe** model serving in RHOAI 3.4.
+Without it, the `kserve` component will refuse to come up healthy.
+
+```{.yaml filename="op-serverless.yaml"}
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: serverless-operator
+  namespace: openshift-serverless
+spec:
+  channel: stable
+  name: serverless-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  installPlanApproval: Automatic
+```
+
+```bash
+oc apply -f op-serverless.yaml
+```
+
+#### 1.2 Red Hat OpenShift Service Mesh
+
+Service Mesh (Istio) provides the ingress gateway and mTLS plumbing that
+KServe + the RHOAI dashboard sit behind.
+
+```{.yaml filename="op-servicemesh.yaml"}
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: servicemeshoperator3
+  namespace: openshift-operators
+spec:
+  channel: stable
+  installPlanApproval: Automatic
+  name: servicemeshoperator3
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  startingCSV: servicemeshoperator3.v3.3.3
+```
+
+```bash
+oc apply -f op-servicemesh.yaml
+```
+
+#### 1.3 Red Hat OpenShift Pipelines
+
+Pipelines (Tekton) is the engine behind RHOAI's **Data Science Pipelines**
+component.
+
+```{.yaml filename="op-pipelines.yaml"}
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: openshift-pipelines-operator-rh
+  namespace: openshift-operators
+spec:
+  channel: latest
+  installPlanApproval: Automatic
+  name: openshift-pipelines-operator-rh
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  startingCSV: openshift-pipelines-operator-rh.v1.22.2
+```
+
+```bash
+oc apply -f op-pipelines.yaml
+```
+
+#### 1.4 Authorino
+
+Authorino handles the auth layer in front of KServe inference endpoints.
+
+```{.yaml filename="op-authorino.yaml"}
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: authorino-operator
+  namespace: openshift-operators
+spec:
+  channel: stable
+  installPlanApproval: Automatic
+  name: authorino-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  startingCSV: authorino-operator.v1.2.2
+```
+
+```bash
+oc apply -f op-authorino.yaml
+```
+
+#### 1.5 Verify all four prerequisites
+
+Watch every prerequisite CSV across the four namespaces. Every row should
+land on `Succeeded` (typically within 2–4 minutes):
+
+```bash
+
+[ec2-user@ip-172-31-27-222 ~]$  oc get csv -n openshift-operators-redhat \
+    -o custom-columns=NAME:.metadata.name,VERSION:.spec.version,PHASE:.status.phase
+NAME                                      VERSION   PHASE
+authorino-operator.v1.2.2                 1.2.2     Succeeded
+openshift-pipelines-operator-rh.v1.22.2   1.22.2    Succeeded
+serverless-operator.v1.37.1               1.37.1    Succeeded
+servicemeshoperator3.v3.3.3               3.3.3     Succeeded
+
+```
+
+### 2. Enable GPUs (Node Feature Discovery + NVIDIA GPU Operator)
+
+Skip this section on a CPU-only cluster. On a GPU worker pool, the NFD
+operator labels nodes that expose PCI GPU devices, and the NVIDIA GPU
+operator deploys the driver, container toolkit, and DCGM exporter.
+
+#### 2.1 Node Feature Discovery
+
+NFD ships in **AllNamespaces** install mode — empty `OperatorGroup` spec.
+
+```{.yaml filename="op-nfd.yaml"}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openshift-nfd
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: nfd-operators
+  namespace: openshift-nfd
+spec:
+  targetNamespaces:
+    - openshift-nfd
+  upgradeStrategy: Default
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: nfd
+  namespace: openshift-nfd
+spec:
+  channel: stable
+  name: nfd
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  installPlanApproval: Automatic
+```
+
+```bash
+oc apply -f op-nfd.yaml
+```
+
+#### 2.2 NVIDIA GPU Operator
+
+The NVIDIA GPU operator ships in **OwnNamespace** install mode, so the
+`OperatorGroup` must list its own namespace under `targetNamespaces`.
+
+```{.yaml filename="op-nvidia-gpu.yaml"}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: nvidia-gpu-operator
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: nvidia-gpu-operators
+  namespace: nvidia-gpu-operator
+spec:
+  targetNamespaces:
+    - nvidia-gpu-operator
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: gpu-operator-certified
+  namespace: nvidia-gpu-operator
+spec:
+  channel: stable
+  name: gpu-operator-certified
+  source: certified-operators
+  sourceNamespace: openshift-marketplace
+  installPlanApproval: Automatic
+```
+
+```bash
+oc apply -f op-nvidia-gpu.yaml
+```
+
+#### 2.3 Roll out the GPU driver — `ClusterPolicy`
+
+Once both CSVs reach `Succeeded`, apply NVIDIA's default `ClusterPolicy` —
+the CR that actually rolls out the driver DaemonSet, container toolkit,
+and DCGM exporter onto every GPU-labeled node:
+
+```bash
+oc get clusterpolicy gpu-cluster-policy -o yaml >/dev/null 2>&1 \
+  || oc apply -f https://raw.githubusercontent.com/NVIDIA/gpu-operator/main/deployments/gpu-operator/values-openshift.yaml
+```
+
+Verify a node now advertises `nvidia.com/gpu`:
+
+```bash
+oc get nodes -o json | jq '.items[].status.capacity["nvidia.com/gpu"]'
+```
+
+### 3. Install the Red Hat OpenShift AI operator
+
+RHOAI lives in `redhat-ods-operator`. Create the namespace, an
+`OperatorGroup`, and a pinned `Subscription` for the `fast` channel
+(use `stable` for production).
+
+```{.bash filename="rhoai-operator.sh"}
+oc apply -f - <<'EOF'
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: redhat-ods-operator
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: rhods-operator
+  namespace: redhat-ods-operator
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: rhods-operator
+  namespace: redhat-ods-operator
+spec:
+  channel: fast
+  name: rhods-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  installPlanApproval: Automatic
+EOF
+```
+
+Wait for the operator CSV:
+
+```bash
+oc get csv -n redhat-ods-operator \
+  -o custom-columns=NAME:.metadata.name,VERSION:.spec.version,PHASE:.status.phase
+```
+
+You're looking for `rhods-operator.3.4.x` in `Succeeded`.
+
+### 4. Bootstrap the platform — `DSCInitialization`
+
+The `DSCI` configures the Service Mesh, monitoring, and the
+`redhat-ods-applications` namespace that every RHOAI workload lives in.
+Apply once per cluster:
+
+```{.yaml filename="dsci.yaml"}
+apiVersion: dscinitialization.opendatahub.io/v1
+kind: DSCInitialization
+metadata:
+  name: default-dsci
+spec:
+  applicationsNamespace: redhat-ods-applications
+  monitoring:
+    managementState: Managed
+    namespace: redhat-ods-monitoring
+  serviceMesh:
+    managementState: Managed
+    controlPlane:
+      name: data-science-smcp
+      namespace: istio-system
+  trustedCABundle:
+    managementState: Managed
+    customCABundle: ""
+```
+
+```bash
+oc apply -f dsci.yaml
+oc get dscinitialization default-dsci -o jsonpath='{.status.phase}{"\n"}'
+# → Ready
+```
+
+### 5. Enable components — `DataScienceCluster`
+
+This is the CR you'll edit most often: it's where you turn individual
+components on or off. The example below enables the full set used in a
+typical RHOAI demo (dashboard, workbenches, pipelines, model serving,
+training, Ray, Kueue).
+
+```{.yaml filename="dsc.yaml"}
+apiVersion: datasciencecluster.opendatahub.io/v1
+kind: DataScienceCluster
+metadata:
+  name: default-dsc
+spec:
+  components:
+    dashboard:                { managementState: Managed }
+    workbenches:              { managementState: Managed }
+    datasciencepipelines:     { managementState: Managed }
+    modelmeshserving:         { managementState: Managed }
+    kserve:                   { managementState: Managed }
+    kueue:                    { managementState: Managed }
+    ray:                      { managementState: Managed }
+    codeflare:                { managementState: Managed }
+    trainingoperator:         { managementState: Managed }
+    trustyai:                 { managementState: Managed }
+    modelregistry:            { managementState: Managed }
+```
+
+```bash
+oc apply -f dsc.yaml
+
+# Watch components come up
+oc get datasciencecluster default-dsc \
+  -o jsonpath='{range .status.conditions[*]}{.type}={.status}{"\n"}{end}'
+```
+
+::: {.callout-tip appearance="simple"}
+Start narrow — `dashboard`, `workbenches`, and `datasciencepipelines` is
+enough to take the platform for a spin. Flip components from `Removed`
+to `Managed` later by re-applying this CR.
+:::
+
+### 6. Open the RHOAI dashboard
+
+The operator publishes a Route in `redhat-ods-applications`. Print it and
+open it in your browser:
+
+```bash
+oc get route -n redhat-ods-applications rhods-dashboard \
+  -o jsonpath='https://{.spec.host}{"\n"}'
+```
+
+Log in with the same `kubeadmin` you used for the OpenShift console — once
+RHOAI sees you have `cluster-admin`, the dashboard exposes *Settings →
+User management* where you can grant `data scientist` / `admin` roles to
+real users from your IdP.
+
+::: {.callout-warning appearance="simple"}
+**Don't rely on `kubeadmin`** for RHOAI day-to-day. RHOAI ties workbench
+ownership and pipeline runs to the logged-in user — when you eventually
+delete the `kubeadmin` secret, anything created by it becomes orphaned.
+Add an IdP before sharing the cluster.
 :::
 
 ## Important notes & best practices
