@@ -8,10 +8,10 @@
 
 <meta name="author" content="Joseph Assiga">
 <meta name="dcterms.date" content="2026-06-10">
-<meta name="keywords" content="OpenShift, AWS, IPI, install-config, kubernetes, devops">
-<meta name="description" content="A compact, annotated shell workflow to install OpenShift 4.x on AWS — with a ready-to-edit install-config.yaml, sensible defaults, and the trade-offs you should know before you press enter.">
+<meta name="keywords" content="OpenShift, RHAI, AWS, IPI, install-config, kubernetes, devops">
+<meta name="description" content="A compact, annotated shell steps to install Red Hat Openshift AI on OpenShift 4.22 (latest version) on AWS - with a ready-to-edit install-config.yaml, sensible defaults, and the trade-offs you should know before you press enter.">
 
-<title>Installing OpenShift on AWS: a repeatable script &amp; walkthrough – Joseph Assiga</title>
+<title>Installing Red Hat OpenShift AI in Red Hat Openshift 4.22 on AWS: A Shell-Based Guide – Joseph Assiga</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -81,7 +81,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../../site_libs/quarto-html/quarto-syntax-highlighting-de63f62b328812d8e578a4d74e282472.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-f556d904efcb49fd30ed882c964a5ef1.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-e821085a919e122585812f1234b61b3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -113,13 +113,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <link rel="stylesheet" href="../../styles.css">
-<meta property="og:title" content="Installing OpenShift on AWS: a repeatable script &amp; walkthrough – Joseph Assiga">
-<meta property="og:description" content="A compact, annotated shell workflow to install OpenShift 4.x on AWS — with a ready-to-edit install-config.yaml, sensible defaults, and the trade-offs you should know before you press enter.">
+<meta property="og:title" content="Installing Red Hat OpenShift AI in Red Hat Openshift 4.22 on AWS: A Shell-Based Guide – Joseph Assiga">
+<meta property="og:description" content="A compact, annotated shell steps to install Red Hat Openshift AI on OpenShift 4.22 (latest version) on AWS - with a ready-to-edit install-config.yaml, sensible defaults, and the trade-offs you should know before you press enter.">
 <meta property="og:image" content="https://josephassiga.github.io//images/ocp-install.svg">
 <meta property="og:site_name" content="Joseph Assiga">
 <meta property="og:image:alt" content="OpenShift installation flow diagram">
-<meta name="twitter:title" content="Installing OpenShift on AWS: a repeatable script &amp; walkthrough – Joseph Assiga">
-<meta name="twitter:description" content="A compact, annotated shell workflow to install OpenShift 4.x on AWS — with a ready-to-edit install-config.yaml, sensible defaults, and the trade-offs you should know before you press enter.">
+<meta name="twitter:title" content="Installing Red Hat OpenShift AI in Red Hat Openshift 4.22 on AWS: A Shell-Based Guide – Joseph Assiga">
+<meta name="twitter:description" content="A compact, annotated shell steps to install Red Hat Openshift AI on OpenShift 4.22 (latest version) on AWS - with a ready-to-edit install-config.yaml, sensible defaults, and the trade-offs you should know before you press enter.">
 <meta name="twitter:image" content="https://josephassiga.github.io//images/ocp-install.svg">
 <meta name="twitter:image:alt" content="OpenShift installation flow diagram">
 <meta name="twitter:card" content="summary_large_image">
@@ -191,10 +191,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">Installing OpenShift on AWS: a repeatable script &amp; walkthrough</h1>
+      <h1 class="title">Installing Red Hat OpenShift AI in Red Hat Openshift 4.22 on AWS: A Shell-Based Guide</h1>
                   <div>
         <div class="description">
-          <p>A compact, annotated shell workflow to install OpenShift 4.x on AWS — with a ready-to-edit install-config.yaml, sensible defaults, and the trade-offs you should know before you press enter.</p>
+          <p>A compact, annotated shell steps to install Red Hat Openshift AI on OpenShift 4.22 (latest version) on AWS - with a ready-to-edit install-config.yaml, sensible defaults, and the trade-offs you should know before you press enter.</p>
         </div>
       </div>
                           <div class="quarto-categories">
@@ -244,7 +244,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <div>
     <div class="keywords">
       <div class="block-title">Keywords</div>
-      <p>OpenShift, AWS, IPI, install-config, kubernetes, devops</p>
+      <p>OpenShift, RHAI, AWS, IPI, install-config, kubernetes, devops</p>
     </div>
   </div>
   
@@ -268,7 +268,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#generate-the-cluster-ssh-key" id="toc-generate-the-cluster-ssh-key" class="nav-link" data-scroll-target="#generate-the-cluster-ssh-key">5. Generate the cluster SSH key</a></li>
   <li><a href="#launch-the-install" id="toc-launch-the-install" class="nav-link" data-scroll-target="#launch-the-install">6. Launch the install</a></li>
   </ul></li>
-  <li><a href="#prepare-the-install-config.yaml-file" id="toc-prepare-the-install-config.yaml-file" class="nav-link" data-scroll-target="#prepare-the-install-config.yaml-file">Prepare the <code>install-config.yaml</code> file:</a></li>
+  <li><a href="#what-a-successful-install-looks-like" id="toc-what-a-successful-install-looks-like" class="nav-link" data-scroll-target="#what-a-successful-install-looks-like">What a successful install looks like</a></li>
+  <li><a href="#inside-the-openshift-web-console" id="toc-inside-the-openshift-web-console" class="nav-link" data-scroll-target="#inside-the-openshift-web-console">Inside the OpenShift web console</a></li>
   <li><a href="#important-notes-best-practices" id="toc-important-notes-best-practices" class="nav-link" data-scroll-target="#important-notes-best-practices">Important notes &amp; best practices</a></li>
   <li><a href="#troubleshooting" id="toc-troubleshooting" class="nav-link" data-scroll-target="#troubleshooting">Troubleshooting</a></li>
   <li><a href="#wrap-up" id="toc-wrap-up" class="nav-link" data-scroll-target="#wrap-up">Wrap-up</a></li>
@@ -422,7 +423,11 @@ Figure&nbsp;3: Create the public Route 53 hosted zone.
 <span id="cb5-7"><a href="#cb5-7"></a><span class="fu">chmod</span> +x openshift-install</span>
 <span id="cb5-8"><a href="#cb5-8"></a><span class="fu">sudo</span> mv openshift-install /usr/local/bin/</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Verify the version matches <code>OCP_VERSION</code>:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1"></a><span class="ex">openshift-install</span> version</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1"></a><span class="ex">[ec2-user@ip-172-31-27-222</span> ~]$ openshift-install version</span>
+<span id="cb6-2"><a href="#cb6-2"></a><span class="ex">openshift-install</span> 4.22.0</span>
+<span id="cb6-3"><a href="#cb6-3"></a><span class="ex">built</span> from commit 92cb4e39665966fd3128abd6256b13aa56523eeb</span>
+<span id="cb6-4"><a href="#cb6-4"></a><span class="ex">release</span> image quay.io/openshift-release-dev/ocp-release@sha256:283887f2860a745387608d106e70e5be2314df2497ee08c69e7bc669ca091340</span>
+<span id="cb6-5"><a href="#cb6-5"></a><span class="ex">release</span> architecture amd64</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="generate-the-cluster-ssh-key" class="level3">
 <h3 class="anchored" data-anchor-id="generate-the-cluster-ssh-key">5. Generate the cluster SSH key</h3>
@@ -447,54 +452,81 @@ Figure&nbsp;3: Create the public Route 53 hosted zone.
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> ocp-install</span>
 <span id="cb8-2"><a href="#cb8-2"></a><span class="co"># Place install-config.yaml inside ./ocp-install/ first, then:</span></span>
 <span id="cb8-3"><a href="#cb8-3"></a><span class="ex">openshift-install</span> create cluster <span class="at">--dir</span> ocp-install <span class="at">--log-level</span><span class="op">=</span>info</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Expect 30–45 minutes for an AWS IPI install. Watch progress with:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1"></a><span class="fu">tail</span> <span class="at">-f</span> ocp-install/.openshift_install.log</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-</section>
-<section id="prepare-the-install-config.yaml-file" class="level2">
-<h2 class="anchored" data-anchor-id="prepare-the-install-config.yaml-file">Prepare the <code>install-config.yaml</code> file:</h2>
+<p>Expect 30–45 minutes for an AWS IPI install. Watch progress with: ## Prepare the <code>install-config.yaml</code> file:</p>
 <p>Adapt <code>baseDomain</code>, instance types, and <code>pullSecret</code> before use.</p>
-<div class="code-with-filename">
-<div class="code-with-filename-file">
-<pre><strong>ocp-install/install-config.yaml</strong></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1"></a><span class="ex">[ec2-user@ip-172-31-27-222</span> ~]$ mkdir <span class="at">-p</span> ocp-install</span>
+<span id="cb9-2"><a href="#cb9-2"></a><span class="co"># Place install-config.yaml inside ./ocp-install/ first, then:</span></span>
+<span id="cb9-3"><a href="#cb9-3"></a><span class="ex">[ec2-user@ip-172-31-27-222</span> ~]$ cat ocp-install/install-config.yaml</span>
+<span id="cb9-4"><a href="#cb9-4"></a><span class="ex">apiVersion:</span> v1</span>
+<span id="cb9-5"><a href="#cb9-5"></a><span class="ex">baseDomain:</span> belowthestack.dev</span>
+<span id="cb9-6"><a href="#cb9-6"></a><span class="ex">compute:</span></span>
+<span id="cb9-7"><a href="#cb9-7"></a>  <span class="ex">-</span> architecture: amd64</span>
+<span id="cb9-8"><a href="#cb9-8"></a>    <span class="ex">hyperthreading:</span> Enabled</span>
+<span id="cb9-9"><a href="#cb9-9"></a>    <span class="ex">name:</span> worker</span>
+<span id="cb9-10"><a href="#cb9-10"></a>    <span class="ex">platform:</span></span>
+<span id="cb9-11"><a href="#cb9-11"></a>      <span class="ex">aws:</span></span>
+<span id="cb9-12"><a href="#cb9-12"></a>        <span class="ex">type:</span> m6i.4xlarge</span>
+<span id="cb9-13"><a href="#cb9-13"></a>    <span class="ex">replicas:</span> 0</span>
+<span id="cb9-14"><a href="#cb9-14"></a><span class="ex">controlPlane:</span></span>
+<span id="cb9-15"><a href="#cb9-15"></a>  <span class="ex">architecture:</span> amd64</span>
+<span id="cb9-16"><a href="#cb9-16"></a>  <span class="ex">hyperthreading:</span> Enabled</span>
+<span id="cb9-17"><a href="#cb9-17"></a>  <span class="ex">name:</span> master</span>
+<span id="cb9-18"><a href="#cb9-18"></a>  <span class="ex">platform:</span></span>
+<span id="cb9-19"><a href="#cb9-19"></a>    <span class="ex">aws:</span></span>
+<span id="cb9-20"><a href="#cb9-20"></a>      <span class="ex">type:</span> g6.12xlarge</span>
+<span id="cb9-21"><a href="#cb9-21"></a>      <span class="ex">rootVolume:</span></span>
+<span id="cb9-22"><a href="#cb9-22"></a>        <span class="ex">size:</span> 1000</span>
+<span id="cb9-23"><a href="#cb9-23"></a>  <span class="ex">replicas:</span> 1</span>
+<span id="cb9-24"><a href="#cb9-24"></a><span class="ex">metadata:</span></span>
+<span id="cb9-25"><a href="#cb9-25"></a>  <span class="ex">name:</span> rhoai-demo</span>
+<span id="cb9-26"><a href="#cb9-26"></a><span class="ex">networking:</span></span>
+<span id="cb9-27"><a href="#cb9-27"></a>  <span class="ex">clusterNetwork:</span></span>
+<span id="cb9-28"><a href="#cb9-28"></a>    <span class="ex">-</span> cidr: 10.128.0.0/14</span>
+<span id="cb9-29"><a href="#cb9-29"></a>      <span class="ex">hostPrefix:</span> 23</span>
+<span id="cb9-30"><a href="#cb9-30"></a>  <span class="ex">machineNetwork:</span></span>
+<span id="cb9-31"><a href="#cb9-31"></a>    <span class="ex">-</span> cidr: 10.0.0.0/16</span>
+<span id="cb9-32"><a href="#cb9-32"></a>  <span class="ex">networkType:</span> OVNKubernetes</span>
+<span id="cb9-33"><a href="#cb9-33"></a>  <span class="ex">serviceNetwork:</span></span>
+<span id="cb9-34"><a href="#cb9-34"></a>    <span class="ex">-</span> 172.30.0.0/16</span>
+<span id="cb9-35"><a href="#cb9-35"></a><span class="ex">platform:</span></span>
+<span id="cb9-36"><a href="#cb9-36"></a>  <span class="ex">aws:</span></span>
+<span id="cb9-37"><a href="#cb9-37"></a>    <span class="ex">region:</span> eu-west-3</span>
+<span id="cb9-38"><a href="#cb9-38"></a><span class="ex">publish:</span> External</span>
+<span id="cb9-39"><a href="#cb9-39"></a><span class="ex">pullSecret:</span> <span class="st">'{"auths":{"cloud.openshift.com":{"auth":"&lt;token&gt;","email":"&lt;email&gt;"}}}'</span></span>
+<span id="cb9-40"><a href="#cb9-40"></a><span class="ex">sshKey:</span> <span class="st">'ssh-ed25519 AAAA...redacted...'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</section>
+<section id="what-a-successful-install-looks-like" class="level2">
+<h2 class="anchored" data-anchor-id="what-a-successful-install-looks-like">What a successful install looks like</h2>
+<p>After the bootstrap phase finishes and the cluster operators settle, the installer prints a final summary block. If you see something close to the output below, the cluster is up and the web console is reachable.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1"></a> <span class="ex">[ec2-user@ip-172-31-27-222</span> ~]$ openshift-install create cluster <span class="at">--dir</span> ocp-install/ <span class="at">--log-level</span><span class="op">=</span>info</span>
+<span id="cb10-2"><a href="#cb10-2"></a><span class="ex">{.text</span> filename=<span class="st">"installer output"</span>}</span>
+<span id="cb10-3"><a href="#cb10-3"></a><span class="ex">INFO</span> Waiting up to 30m0s <span class="er">(</span><span class="cf">until</span> <span class="ex">3:53AM</span> UTC<span class="kw">)</span> <span class="ex">to</span> ensure each cluster operator has finished progressing...</span>
+<span id="cb10-4"><a href="#cb10-4"></a><span class="ex">INFO</span> All cluster operators have completed progressing</span>
+<span id="cb10-5"><a href="#cb10-5"></a><span class="ex">INFO</span> Checking to see if there is a route at openshift-console/console...</span>
+<span id="cb10-6"><a href="#cb10-6"></a><span class="ex">INFO</span> Install complete!</span>
+<span id="cb10-7"><a href="#cb10-7"></a><span class="ex">INFO</span> To access the cluster as the system:admin user when using <span class="st">'oc'</span>, run</span>
+<span id="cb10-8"><a href="#cb10-8"></a><span class="ex">INFO</span>     export KUBECONFIG=/home/ec2-user/ocp-install/auth/kubeconfig</span>
+<span id="cb10-9"><a href="#cb10-9"></a><span class="ex">INFO</span> Access the OpenShift web-console here: https://console-openshift-console.apps.rhoai-demo.belowthestack.dev</span>
+<span id="cb10-10"><a href="#cb10-10"></a><span class="ex">INFO</span> Login to the console with user: <span class="st">"kubeadmin"</span>, and password: <span class="st">"UoGgI-T78I9-25QEz-DHaI3"</span></span>
+<span id="cb10-11"><a href="#cb10-11"></a><span class="ex">INFO</span> Time elapsed: 29s</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Two things worth doing immediately:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1"></a><span class="co"># 1. Wire up oc/kubectl against the new cluster</span></span>
+<span id="cb11-2"><a href="#cb11-2"></a><span class="bu">export</span> <span class="va">KUBECONFIG</span><span class="op">=</span>/home/ec2-user/ocp-install/auth/kubeconfig</span>
+<span id="cb11-3"><a href="#cb11-3"></a><span class="ex">oc</span> get nodes</span>
+<span id="cb11-4"><a href="#cb11-4"></a><span class="ex">oc</span> get clusteroperators</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1"></a><span class="co"># 2. Save (and then rotate) the kubeadmin credentials</span></span>
+<span id="cb12-2"><a href="#cb12-2"></a><span class="fu">cat</span> ocp-install/auth/kubeadmin-password</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-simple callout-important">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10" data-filename="ocp-install/install-config.yaml"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb10-1"><a href="#cb10-1"></a><span class="fu">apiVersion</span><span class="kw">:</span><span class="at"> v1</span></span>
-<span id="cb10-2"><a href="#cb10-2"></a><span class="fu">baseDomain</span><span class="kw">:</span><span class="at"> belowthestack.dev</span></span>
-<span id="cb10-3"><a href="#cb10-3"></a><span class="fu">compute</span><span class="kw">:</span></span>
-<span id="cb10-4"><a href="#cb10-4"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">architecture</span><span class="kw">:</span><span class="at"> amd64</span></span>
-<span id="cb10-5"><a href="#cb10-5"></a><span class="at">    </span><span class="fu">hyperthreading</span><span class="kw">:</span><span class="at"> Enabled</span></span>
-<span id="cb10-6"><a href="#cb10-6"></a><span class="at">    </span><span class="fu">name</span><span class="kw">:</span><span class="at"> worker</span></span>
-<span id="cb10-7"><a href="#cb10-7"></a><span class="at">    </span><span class="fu">platform</span><span class="kw">:</span></span>
-<span id="cb10-8"><a href="#cb10-8"></a><span class="at">      </span><span class="fu">aws</span><span class="kw">:</span></span>
-<span id="cb10-9"><a href="#cb10-9"></a><span class="at">        </span><span class="fu">type</span><span class="kw">:</span><span class="at"> m6i.4xlarge</span></span>
-<span id="cb10-10"><a href="#cb10-10"></a><span class="at">    </span><span class="fu">replicas</span><span class="kw">:</span><span class="at"> </span><span class="dv">0</span></span>
-<span id="cb10-11"><a href="#cb10-11"></a><span class="fu">controlPlane</span><span class="kw">:</span></span>
-<span id="cb10-12"><a href="#cb10-12"></a><span class="at">  </span><span class="fu">architecture</span><span class="kw">:</span><span class="at"> amd64</span></span>
-<span id="cb10-13"><a href="#cb10-13"></a><span class="at">  </span><span class="fu">hyperthreading</span><span class="kw">:</span><span class="at"> Enabled</span></span>
-<span id="cb10-14"><a href="#cb10-14"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> master</span></span>
-<span id="cb10-15"><a href="#cb10-15"></a><span class="at">  </span><span class="fu">platform</span><span class="kw">:</span></span>
-<span id="cb10-16"><a href="#cb10-16"></a><span class="at">    </span><span class="fu">aws</span><span class="kw">:</span></span>
-<span id="cb10-17"><a href="#cb10-17"></a><span class="at">      </span><span class="fu">type</span><span class="kw">:</span><span class="at"> g6.12xlarge</span></span>
-<span id="cb10-18"><a href="#cb10-18"></a><span class="at">      </span><span class="fu">rootVolume</span><span class="kw">:</span></span>
-<span id="cb10-19"><a href="#cb10-19"></a><span class="at">        </span><span class="fu">size</span><span class="kw">:</span><span class="at"> </span><span class="dv">1000</span></span>
-<span id="cb10-20"><a href="#cb10-20"></a><span class="at">  </span><span class="fu">replicas</span><span class="kw">:</span><span class="at"> </span><span class="dv">1</span></span>
-<span id="cb10-21"><a href="#cb10-21"></a><span class="fu">metadata</span><span class="kw">:</span></span>
-<span id="cb10-22"><a href="#cb10-22"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> rhoai-demo</span></span>
-<span id="cb10-23"><a href="#cb10-23"></a><span class="fu">networking</span><span class="kw">:</span></span>
-<span id="cb10-24"><a href="#cb10-24"></a><span class="at">  </span><span class="fu">clusterNetwork</span><span class="kw">:</span></span>
-<span id="cb10-25"><a href="#cb10-25"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">cidr</span><span class="kw">:</span><span class="at"> 10.128.0.0/14</span></span>
-<span id="cb10-26"><a href="#cb10-26"></a><span class="at">      </span><span class="fu">hostPrefix</span><span class="kw">:</span><span class="at"> </span><span class="dv">23</span></span>
-<span id="cb10-27"><a href="#cb10-27"></a><span class="at">  </span><span class="fu">machineNetwork</span><span class="kw">:</span></span>
-<span id="cb10-28"><a href="#cb10-28"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">cidr</span><span class="kw">:</span><span class="at"> 10.0.0.0/16</span></span>
-<span id="cb10-29"><a href="#cb10-29"></a><span class="at">  </span><span class="fu">networkType</span><span class="kw">:</span><span class="at"> OVNKubernetes</span></span>
-<span id="cb10-30"><a href="#cb10-30"></a><span class="at">  </span><span class="fu">serviceNetwork</span><span class="kw">:</span></span>
-<span id="cb10-31"><a href="#cb10-31"></a><span class="at">    </span><span class="kw">-</span><span class="at"> 172.30.0.0/16</span></span>
-<span id="cb10-32"><a href="#cb10-32"></a><span class="fu">platform</span><span class="kw">:</span></span>
-<span id="cb10-33"><a href="#cb10-33"></a><span class="at">  </span><span class="fu">aws</span><span class="kw">:</span></span>
-<span id="cb10-34"><a href="#cb10-34"></a><span class="at">    </span><span class="fu">region</span><span class="kw">:</span><span class="at"> eu-west-3</span></span>
-<span id="cb10-35"><a href="#cb10-35"></a><span class="fu">publish</span><span class="kw">:</span><span class="at"> External</span></span>
-<span id="cb10-36"><a href="#cb10-36"></a><span class="fu">pullSecret</span><span class="kw">:</span><span class="at"> </span><span class="st">'{"auths":{"cloud.openshift.com":{"auth":"&lt;token&gt;","email":"&lt;email&gt;"}}}'</span></span>
-<span id="cb10-37"><a href="#cb10-37"></a><span class="fu">sshKey</span><span class="kw">:</span><span class="at"> </span><span class="st">'ssh-ed25519 AAAA...redacted...'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout-body-container">
+<p>The <code>kubeadmin</code> account is a temporary bootstrap credential. As soon as you’ve wired up a real identity provider (OIDC, htpasswd, LDAP…) and granted <code>cluster-admin</code> to a real user, delete the <code>kubeadmin</code> secret:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1"></a><span class="ex">oc</span> delete secret kubeadmin <span class="at">-n</span> kube-system</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
 </div>
 <div class="callout callout-style-default callout-warning callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -507,6 +539,37 @@ Figure&nbsp;3: Create the public Route 53 hosted zone.
 </div>
 <div class="callout-body-container callout-body">
 <p><code>pullSecret</code> and the contents of <code>~/.ssh/rhoai-demo</code> are credentials. Add <code>install-config.yaml</code>, <code>*.pem</code>, and <code>auth/</code> to your <code>.gitignore</code> <em>before</em> running the installer — the installer mutates this file and writes <code>auth/kubeadmin-password</code> and <code>auth/kubeconfig</code> next to it.</p>
+</div>
+</div>
+</section>
+<section id="inside-the-openshift-web-console" class="level2">
+<h2 class="anchored" data-anchor-id="inside-the-openshift-web-console">Inside the OpenShift web console</h2>
+<p>Browsing to the URL printed by the installer (<code>https://console-openshift-console.apps.rhoai-demo.belowthestack.dev</code>) and logging in with <code>kubeadmin</code> lands on the cluster <strong>Overview</strong>. This is the first place I check after every install — it confirms the control plane, operators, and Insights all came up green before any workloads are scheduled.</p>
+<div id="fig-ocp-console" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ocp-console-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../images/ocp-console-overview.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ocp-console-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4: Red Hat OpenShift 4.22 web console — cluster Overview right after install.
+</figcaption>
+</figure>
+</div>
+<p>A few things worth noticing in <a href="#fig-ocp-console" class="quarto-xref">Figure&nbsp;4</a>:</p>
+<ul>
+<li><strong>Top banner</strong> — <em>“You are logged in as a temporary administrative user…”</em> is the cluster reminding you that <code>kubeadmin</code> is bootstrap-only and you should configure a real identity provider via <em>cluster OAuth</em>.</li>
+<li><strong>Status tiles</strong> — Control Plane, Operators, and Insights are all green. <em>Single control plane node</em> matches the <code>controlPlane.replicas: 1</code> lab topology from the install-config.</li>
+<li><strong>Details panel</strong> — confirms <code>OpenShift version: 4.22.0</code>, <code>Infrastructure provider: AWS</code>, and the cluster API endpoint <code>https://api.rhoai-demo.belowthestack.dev:6443</code> used by <code>oc</code>/<code>kubectl</code>.</li>
+<li><strong>AlertmanagerReceiversNotConfigured</strong> — expected on a fresh cluster. Wire up a receiver (PagerDuty, Slack, email…) before treating any workload as production.</li>
+</ul>
+<div class="callout callout-style-simple callout-tip">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>The console’s <em>Getting started resources</em> panel (“Add identity providers”, “Configure alert receivers”, “Take console tour”) is a sensible day-0 checklist — work through it before installing the RHOAI operator on top.</p>
+</div>
 </div>
 </div>
 </section>
