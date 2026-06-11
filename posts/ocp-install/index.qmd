@@ -446,17 +446,64 @@ spec:
 oc apply -f op-authorino.yaml
 ```
 
-#### 1.5 Verify all four prerequisites
+#### 1.5 Red Hat cert-manager Operator
+
+cert-manager issues and rotates the TLS certificates that **KServe** uses
+for its inference endpoints and that **Service Mesh** consumes for ingress
+gateway termination. RHOAI 3.4 will refuse to bring `kserve` to `Ready` if
+no cert-manager CRDs are present in the cluster.
+
+```{.yaml filename="op-cert-manager.yaml"}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cert-manager-operator
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: openshift-cert-manager-operator
+  namespace: cert-manager-operator
+spec:
+  targetNamespaces:
+    - openshift-nfd
+  upgradeStrategy: Default
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: openshift-cert-manager-operator
+  namespace: cert-manager-operator
+spec:
+  channel: stable-v1
+  name: openshift-cert-manager-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  installPlanApproval: Automatic
+```
+
+```bash
+oc apply -f op-cert-manager.yaml
+```
+
+::: {.callout-tip appearance="simple"}
+After the operator is up, create a `ClusterIssuer` (Let's Encrypt, an
+internal CA, or a self-signed one for lab clusters) so KServe and other
+RHOAI components have somewhere to ask for certificates. You can do this
+*after* the RHOAI install — KServe will pick it up when it's there.
+:::
+
+#### 1.6 Verify all four prerequisites
 
 Watch every prerequisite CSV across the four namespaces. Every row should
 land on `Succeeded` (typically within 2–4 minutes):
 
 ```bash
 
-[ec2-user@ip-172-31-27-222 ~]$  oc get csv -n openshift-operators-redhat \
-    -o custom-columns=NAME:.metadata.name,VERSION:.spec.version,PHASE:.status.phase
+[ec2-user@ip-172-31-43-132 ~]$ oc get csv -n openshift-operators-redhat -o custom-columns=NAME:.metadata.name,VERSION:.spec.version,PHASE:.status.phase
 NAME                                      VERSION   PHASE
-authorino-operator.v1.2.2                 1.2.2     Succeeded
+authorino-operator.v1.4.0                 1.4.0     Succeeded
 openshift-pipelines-operator-rh.v1.22.2   1.22.2    Succeeded
 serverless-operator.v1.37.1               1.37.1    Succeeded
 servicemeshoperator3.v3.3.3               3.3.3     Succeeded
@@ -508,7 +555,7 @@ oc apply -f op-nfd.yaml
 ```
 
 ::: {.callout-tip appearance="simple"}
-Leave the default name and settings, and click Create `NodeFeatureDiscovery`
+Leave the default name and settings, and click Create `NodeFeatureDiscovery` and wait for 5–10 minutes for GPU-labeled nodes to appear.
 :::
 
 #### 2.2 NVIDIA GPU Operator
@@ -561,12 +608,55 @@ Leave the default name and settings, and click Create `ClusterPolicy` and wait f
 
 ### 3. Install the Red Hat OpenShift AI operator
 
-RHOAI lives in `redhat-ods-operator`. Create the namespace, an
-`OperatorGroup`, and a pinned `Subscription` for the `fast` channel
-(use `stable` for production).
+#### 3.1 Add a 4.21 `CatalogSource` for `rhods-operator`
 
-```{.bash filename="rhoai-operator.sh"}
-oc apply -f - <<'EOF'
+::: {.callout-important appearance="simple"}
+**Why this step is necessary.** The default `redhat-operators`
+`CatalogSource` shipped with OpenShift 4.22 (`registry.redhat.io/redhat/
+redhat-operator-index:v4.22`) does **not** yet contain a
+`rhods-operator` package. Until that lands, point a *new* `CatalogSource`
+at the 4.21 index — which does ship `rhods-operator.v3.4.x` — and have
+the RHOAI `Subscription` consume it.
+:::
+
+This adds a parallel catalog (it does **not** replace the default
+`redhat-operators`), so other operators on the cluster keep tracking the
+4.22 index as usual.
+
+```{.yaml filename="catalogsource-rhoai.yaml"}
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: redhat-operators-v4-21
+  namespace: openshift-marketplace
+spec:
+  displayName: Red Hat Operators v4.21
+  publisher: Red Hat
+  sourceType: grpc
+  image: registry.redhat.io/redhat/redhat-operator-index:v4.21
+  updateStrategy:
+    registryPoll:
+      interval: 45m
+```
+
+```bash
+oc apply -f catalogsource-rhoai.yaml
+```
+
+::: {.callout-tip appearance="simple"}
+Remove this `CatalogSource` (and switch the `Subscription` below back to
+`redhat-operators`) once a future OpenShift 4.22.z ships `rhods-operator`
+in the default 4.22 index — otherwise you'll be tracking a frozen index.
+:::
+
+#### 3.2 Subscribe to `rhods-operator`
+
+RHOAI lives in `redhat-ods-operator`. Create the namespace, an
+`OperatorGroup`, and a pinned `Subscription` on channel `stable-3.4`
+pointing at the 4.21 `CatalogSource` you just created.
+
+```{.yaml filename="rhoai-operator.yaml"}
 ---
 apiVersion: v1
 kind: Namespace
@@ -585,22 +675,17 @@ metadata:
   name: rhods-operator
   namespace: redhat-ods-operator
 spec:
-  channel: fast
   name: rhods-operator
-  source: redhat-operators
+  channel: stable-3.4
+  source: redhat-operators-v4-21       # ← the CatalogSource from 3.1
   sourceNamespace: openshift-marketplace
   installPlanApproval: Automatic
-EOF
 ```
-
-Wait for the operator CSV:
 
 ```bash
-oc get csv -n redhat-ods-operator \
-  -o custom-columns=NAME:.metadata.name,VERSION:.spec.version,PHASE:.status.phase
+oc apply -f rhoai-operator.yaml
 ```
 
-You're looking for `rhods-operator.3.4.x` in `Succeeded`.
 
 ### 4. Bootstrap the platform — `DSCInitialization`
 
