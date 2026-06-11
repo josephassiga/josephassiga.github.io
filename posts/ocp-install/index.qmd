@@ -1,7 +1,7 @@
 ---
-title: "Installing OpenShift on AWS: a repeatable script & walkthrough"
+title: "Installing Red Hat OpenShift AI in Red Hat Openshift 4.22 on AWS: A Shell-Based Guide"
 description: |
-  A compact, annotated shell workflow to install OpenShift 4.x on AWS — with a
+  A compact, annotated shell steps to install Red Hat Openshift AI on OpenShift 4.22 (latest version) on AWS - with a
   ready-to-edit install-config.yaml, sensible defaults, and the trade-offs you
   should know before you press enter.
 author:
@@ -13,7 +13,7 @@ date-modified: 2026-06-10
 categories: [openshift, cloud, aws, devops, kubernetes]
 image: /images/ocp-install.svg
 image-alt: "OpenShift installation flow diagram"
-keywords: [OpenShift, AWS, IPI, install-config, kubernetes, devops]
+keywords: [OpenShift, RHAI, AWS, IPI, install-config, kubernetes, devops]
 format:
   html:
     toc: true
@@ -149,7 +149,11 @@ sudo mv openshift-install /usr/local/bin/
 Verify the version matches `OCP_VERSION`:
 
 ```bash
-openshift-install version
+[ec2-user@ip-172-31-27-222 ~]$ openshift-install version
+openshift-install 4.22.0
+built from commit 92cb4e39665966fd3128abd6256b13aa56523eeb
+release image quay.io/openshift-release-dev/ocp-release@sha256:283887f2860a745387608d106e70e5be2314df2497ee08c69e7bc669ca091340
+release architecture amd64
 ```
 
 ### 5. Generate the cluster SSH key
@@ -182,16 +186,14 @@ openshift-install create cluster --dir ocp-install --log-level=info
 ```
 
 Expect 30–45 minutes for an AWS IPI install. Watch progress with:
-
-```bash
-tail -f ocp-install/.openshift_install.log
-```
-
 ## Prepare the `install-config.yaml` file:
 
 Adapt `baseDomain`, instance types, and `pullSecret` before use.
 
-```{.yaml filename="ocp-install/install-config.yaml"}
+```bash
+[ec2-user@ip-172-31-27-222 ~]$ mkdir -p ocp-install
+# Place install-config.yaml inside ./ocp-install/ first, then:
+[ec2-user@ip-172-31-27-222 ~]$ cat ocp-install/install-config.yaml
 apiVersion: v1
 baseDomain: belowthestack.dev
 compute:
@@ -231,6 +233,50 @@ pullSecret: '{"auths":{"cloud.openshift.com":{"auth":"<token>","email":"<email>"
 sshKey: 'ssh-ed25519 AAAA...redacted...'
 ```
 
+## What a successful install looks like
+
+After the bootstrap phase finishes and the cluster operators settle, the
+installer prints a final summary block. If you see something close to the
+output below, the cluster is up and the web console is reachable.
+
+```bash
+ [ec2-user@ip-172-31-27-222 ~]$ openshift-install create cluster --dir ocp-install/ --log-level=info
+{.text filename="installer output"}
+INFO Waiting up to 30m0s (until 3:53AM UTC) to ensure each cluster operator has finished progressing...
+INFO All cluster operators have completed progressing
+INFO Checking to see if there is a route at openshift-console/console...
+INFO Install complete!
+INFO To access the cluster as the system:admin user when using 'oc', run
+INFO     export KUBECONFIG=/home/ec2-user/ocp-install/auth/kubeconfig
+INFO Access the OpenShift web-console here: https://console-openshift-console.apps.rhoai-demo.belowthestack.dev
+INFO Login to the console with user: "kubeadmin", and password: "UoGgI-T78I9-25QEz-DHaI3"
+INFO Time elapsed: 29s
+```
+
+Two things worth doing immediately:
+
+```bash
+# 1. Wire up oc/kubectl against the new cluster
+export KUBECONFIG=/home/ec2-user/ocp-install/auth/kubeconfig
+oc get nodes
+oc get clusteroperators
+```
+
+```bash
+# 2. Save (and then rotate) the kubeadmin credentials
+cat ocp-install/auth/kubeadmin-password
+```
+
+::: {.callout-important appearance="simple"}
+The `kubeadmin` account is a temporary bootstrap credential. As soon as
+you've wired up a real identity provider (OIDC, htpasswd, LDAP…) and
+granted `cluster-admin` to a real user, delete the `kubeadmin` secret:
+
+```bash
+oc delete secret kubeadmin -n kube-system
+```
+:::
+
 ::: {.callout-warning}
 ## Never commit secrets
 
@@ -238,6 +284,39 @@ sshKey: 'ssh-ed25519 AAAA...redacted...'
 Add `install-config.yaml`, `*.pem`, and `auth/` to your `.gitignore` *before*
 running the installer — the installer mutates this file and writes
 `auth/kubeadmin-password` and `auth/kubeconfig` next to it.
+:::
+
+## Inside the OpenShift web console
+
+Browsing to the URL printed by the installer
+(`https://console-openshift-console.apps.rhoai-demo.belowthestack.dev`)
+and logging in with `kubeadmin` lands on the cluster **Overview**. This is
+the first place I check after every install — it confirms the control
+plane, operators, and Insights all came up green before any workloads
+are scheduled.
+
+![Red Hat OpenShift 4.22 web console — cluster Overview right after install.](/images/ocp-console-overview.png){#fig-ocp-console fig-align="center" width="100%"}
+
+A few things worth noticing in @fig-ocp-console:
+
+- **Top banner** — *"You are logged in as a temporary administrative
+  user…"* is the cluster reminding you that `kubeadmin` is bootstrap-only
+  and you should configure a real identity provider via *cluster OAuth*.
+- **Status tiles** — Control Plane, Operators, and Insights are all green.
+  *Single control plane node* matches the `controlPlane.replicas: 1` lab
+  topology from the install-config.
+- **Details panel** — confirms `OpenShift version: 4.22.0`,
+  `Infrastructure provider: AWS`, and the cluster API endpoint
+  `https://api.rhoai-demo.belowthestack.dev:6443` used by `oc`/`kubectl`.
+- **AlertmanagerReceiversNotConfigured** — expected on a fresh cluster.
+  Wire up a receiver (PagerDuty, Slack, email…) before treating any
+  workload as production.
+
+::: {.callout-tip appearance="simple"}
+The console's *Getting started resources* panel ("Add identity
+providers", "Configure alert receivers", "Take console tour") is a
+sensible day-0 checklist — work through it before installing the
+RHOAI operator on top.
 :::
 
 ## Important notes & best practices
