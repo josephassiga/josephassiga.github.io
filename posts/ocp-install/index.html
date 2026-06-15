@@ -278,6 +278,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#create-components-datasciencecluster" id="toc-create-components-datasciencecluster" class="nav-link" data-scroll-target="#create-components-datasciencecluster">4. Create components — <code>DataScienceCluster</code></a></li>
   <li><a href="#open-the-rhoai-dashboard" id="toc-open-the-rhoai-dashboard" class="nav-link" data-scroll-target="#open-the-rhoai-dashboard">6. Open the RHOAI dashboard</a></li>
   <li><a href="#add-an-htpasswd-identity-provider" id="toc-add-an-htpasswd-identity-provider" class="nav-link" data-scroll-target="#add-an-htpasswd-identity-provider">7. Add an HTPasswd identity provider</a></li>
+  <li><a href="#inside-the-rhoai-dashboard" id="toc-inside-the-rhoai-dashboard" class="nav-link" data-scroll-target="#inside-the-rhoai-dashboard">8. Inside the RHOAI dashboard</a></li>
   </ul></li>
   <li><a href="#important-notes-best-practices" id="toc-important-notes-best-practices" class="nav-link" data-scroll-target="#important-notes-best-practices">Important notes &amp; best practices</a></li>
   <li><a href="#troubleshooting" id="toc-troubleshooting" class="nav-link" data-scroll-target="#troubleshooting">Troubleshooting</a></li>
@@ -1168,6 +1169,36 @@ Figure&nbsp;4: Red Hat OpenShift 4.22 web console — cluster Overview right aft
 <div class="callout-body-container">
 <p>Once <code>mladmin</code> (or any real user) has <code>cluster-admin</code>, delete the bootstrap account so it can never be used again:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb48"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb48-1"><a href="#cb48-1"></a><span class="ex">oc</span> delete secret kubeadmin <span class="at">-n</span> kube-system</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+</section>
+<section id="inside-the-rhoai-dashboard" class="level3">
+<h3 class="anchored" data-anchor-id="inside-the-rhoai-dashboard">8. Inside the RHOAI dashboard</h3>
+<p>Logging back in as <code>mladmin</code> and hitting the <code>rhods-dashboard</code> Route lands on the RHOAI <strong>Home</strong> view. This is the first place to sanity-check that every <code>DataScienceCluster</code> component you enabled in step 4 came up — each section in the left rail corresponds to one <code>managementState: Managed</code> entry from <code>dsc.yaml</code>.</p>
+<div id="fig-rhoai-console" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-rhoai-console-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../images/rhoai-console.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-rhoai-console-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5: Red Hat OpenShift AI 3.4 dashboard — landing page right after install, logged in as <code>mladmin</code>.
+</figcaption>
+</figure>
+</div>
+<p>A few things worth noticing in <a href="#fig-rhoai-console" class="quarto-xref">Figure&nbsp;5</a>:</p>
+<ul>
+<li><strong>Left navigation</strong> — <em>Data science projects</em>, <em>Workbenches</em>, <em>Pipelines</em>, <em>Distributed workloads</em>, <em>Models</em>, <em>Resources</em>, <em>Settings</em>. A missing entry means the matching <code>DataScienceCluster</code> component is <code>Removed</code> instead of <code>Managed</code> — re-apply <code>dsc.yaml</code> to enable it.</li>
+<li><strong>Top-right user menu</strong> — should read <code>mladmin</code>, not <code>kubeadmin</code>. If you still see <code>kubeadmin</code>, the OAuth pods from step 7 haven’t rolled yet (<code>oc get pods -n openshift-authentication -w</code>).</li>
+<li><strong>Settings → User management</strong> — only visible because <code>mladmin</code> has <code>cluster-admin</code>. This is where you grant <code>data scientist</code> / <code>admin</code> roles to other HTPasswd users without giving them full cluster privileges.</li>
+</ul>
+<div class="callout callout-style-simple callout-tip">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>The first thing most RHOAI walkthroughs do from this screen is <em>Data science projects → Create project</em> and then <em>Create workbench</em> with a PyTorch image — that exercises the workbench controller, the PVC provisioner, and (if you picked a GPU image) the NVIDIA device plugin in one shot.</p>
 </div>
 </div>
 </div>

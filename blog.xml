@@ -3461,6 +3461,36 @@ font-style: inherit;">-n</span> kube-system</span></code></pre></div></div>
 </div>
 </div>
 </section>
+<section id="inside-the-rhoai-dashboard" class="level3">
+<h3 class="anchored" data-anchor-id="inside-the-rhoai-dashboard">8. Inside the RHOAI dashboard</h3>
+<p>Logging back in as <code>mladmin</code> and hitting the <code>rhods-dashboard</code> Route lands on the RHOAI <strong>Home</strong> view. This is the first place to sanity-check that every <code>DataScienceCluster</code> component you enabled in step 4 came up — each section in the left rail corresponds to one <code>managementState: Managed</code> entry from <code>dsc.yaml</code>.</p>
+<div id="fig-rhoai-console" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-rhoai-console-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="https://josephassiga.github.io/images/rhoai-console.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-rhoai-console-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5: Red Hat OpenShift AI 3.4 dashboard — landing page right after install, logged in as <code>mladmin</code>.
+</figcaption>
+</figure>
+</div>
+<p>A few things worth noticing in Figure&nbsp;5:</p>
+<ul>
+<li><strong>Left navigation</strong> — <em>Data science projects</em>, <em>Workbenches</em>, <em>Pipelines</em>, <em>Distributed workloads</em>, <em>Models</em>, <em>Resources</em>, <em>Settings</em>. A missing entry means the matching <code>DataScienceCluster</code> component is <code>Removed</code> instead of <code>Managed</code> — re-apply <code>dsc.yaml</code> to enable it.</li>
+<li><strong>Top-right user menu</strong> — should read <code>mladmin</code>, not <code>kubeadmin</code>. If you still see <code>kubeadmin</code>, the OAuth pods from step 7 haven’t rolled yet (<code>oc get pods -n openshift-authentication -w</code>).</li>
+<li><strong>Settings → User management</strong> — only visible because <code>mladmin</code> has <code>cluster-admin</code>. This is where you grant <code>data scientist</code> / <code>admin</code> roles to other HTPasswd users without giving them full cluster privileges.</li>
+</ul>
+<div class="callout callout-style-simple callout-tip">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>The first thing most RHOAI walkthroughs do from this screen is <em>Data science projects → Create project</em> and then <em>Create workbench</em> with a PyTorch image — that exercises the workbench controller, the PVC provisioner, and (if you picked a GPU image) the NVIDIA device plugin in one shot.</p>
+</div>
+</div>
+</div>
+</section>
 </section>
 <section id="important-notes-best-practices" class="level2">
 <h2 class="anchored" data-anchor-id="important-notes-best-practices">Important notes &amp; best practices</h2>
