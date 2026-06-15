@@ -128,6 +128,10 @@ Verify before moving on:
 ```bash
 oc version --client
 kubectl version --client
+Client Version: 4.22.0
+Kustomize Version: v5.7.1
+Client Version: v1.35.2
+Kustomize Version: v5.7.1
 ```
 
 ### 4. Install the `openshift-install` binary
@@ -777,11 +781,12 @@ metadata:
   name: rhods-operator
   namespace: redhat-ods-operator
 spec:
-  name: rhods-operator
-  channel: stable-3.4
-  source: redhat-operators-v4-21       # ← the CatalogSource from 3.1
-  sourceNamespace: openshift-marketplace
+  channel: stable-3.x # Make sure to use the latest 3.x channel for RHOAI 3.4.
   installPlanApproval: Automatic
+  name: rhods-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace-v4.21
+  startingCSV: rhods-operator.3.4.0
 ```
 
 ```bash
@@ -867,6 +872,87 @@ real users from your IdP.
 ownership and pipeline runs to the logged-in user — when you eventually
 delete the `kubeadmin` secret, anything created by it becomes orphaned.
 Add an IdP before sharing the cluster.
+:::
+
+### 7. Add an HTPasswd identity provider
+
+On a lab cluster, the quickest way to stop leaning on `kubeadmin` is an
+**HTPasswd** identity provider — a flat file of user/bcrypt pairs that
+OpenShift authenticates against natively. Production clusters should
+prefer OIDC/LDAP/GitHub, but for a demo this is two minutes of work and
+unblocks the RHOAI dashboard.
+
+::: {.callout-note appearance="simple"}
+The RHOAI 3.x dashboard refuses to fully render for `kubeadmin` because
+that account has no `User` object in `user.openshift.io` — it's
+synthesised on the fly by OAuth. RHOAI's workbench/pipeline ownership
+queries need a real `User`, hence the need for an HTPasswd (or any
+other) identity provider before the dashboard "loads normally".
+:::
+
+**a. Create the HTPasswd file and the secret it backs**
+
+```bash
+htpasswd -c -B ./htpasswd mladmin
+# bcrypt the password interactively, then ship the file to OpenShift:
+
+oc create secret generic htpasswd-secret \
+   --from-file=htpasswd=./htpasswd \
+   -n openshift-config
+```
+
+The `-B` flag forces bcrypt (required by OpenShift) and `-c` creates the
+file fresh. Drop `-c` on subsequent runs so you don't blow away existing
+entries.
+
+**b. Wire the secret into the cluster `OAuth` CR**
+
+```{.yaml filename="oauth-htpasswd.yaml"}
+apiVersion: config.openshift.io/v1
+kind: OAuth
+metadata:
+  name: cluster
+spec:
+  identityProviders:
+    - name: local_users
+      mappingMethod: claim
+      type: HTPasswd
+      htpasswd:
+        fileData:
+          name: htpasswd-secret
+```
+
+```bash
+oc apply -f oauth-htpasswd.yaml
+```
+
+**c. Grant `cluster-admin` to the new user**
+
+```bash
+oc adm policy add-cluster-role-to-user cluster-admin mladmin
+```
+
+**d. Wait for the OAuth pods to roll, then re-login**
+
+The cluster operator rotates the OAuth server pods after every change to
+the `OAuth` CR — it takes 1–2 minutes:
+
+```bash
+oc get pods -n openshift-authentication -w
+# Ctrl-C once the new oauth-openshift-* pods are Running
+```
+
+Log out of `kubeadmin` in the OpenShift console (top-right → *Log out*),
+then log back in as `mladmin`. The RHOAI dashboard will now load
+normally and `mladmin` will own anything it creates.
+
+::: {.callout-tip appearance="simple"}
+Once `mladmin` (or any real user) has `cluster-admin`, delete the
+bootstrap account so it can never be used again:
+
+```bash
+oc delete secret kubeadmin -n kube-system
+```
 :::
 
 ## Important notes & best practices
