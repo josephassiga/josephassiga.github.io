@@ -234,7 +234,19 @@ font-style: inherit;">--client</span></span>
 background-color: null;
 font-style: inherit;">kubectl</span> version <span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;">--client</span></span></code></pre></div></div>
+font-style: inherit;">--client</span></span>
+<span id="cb4-3"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">Client</span> Version: 4.22.0</span>
+<span id="cb4-4"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">Kustomize</span> Version: v5.7.1</span>
+<span id="cb4-5"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">Client</span> Version: v1.35.2</span>
+<span id="cb4-6"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">Kustomize</span> Version: v5.7.1</span></code></pre></div></div>
 </section>
 <section id="install-the-openshift-install-binary" class="level3">
 <h3 class="anchored" data-anchor-id="install-the-openshift-install-binary">4. Install the <code>openshift-install</code> binary</h3>
@@ -2824,45 +2836,15 @@ font-style: inherit;">:</span></span>
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
-font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> rhods-operator</span></span>
-<span id="cb38-20"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
-background-color: null;
 font-style: inherit;">channel</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;"> stable-3.4</span></span>
-<span id="cb38-21"><span class="at" style="color: #657422;
+font-style: inherit;"> stable-3.x</span><span class="co" style="color: #5E5E5E;
 background-color: null;
-font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">source</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> redhat-operators-v4-21</span><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">       # ← the CatalogSource from 3.1</span></span>
-<span id="cb38-22"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">sourceNamespace</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> openshift-marketplace</span></span>
-<span id="cb38-23"><span class="at" style="color: #657422;
+font-style: inherit;"> # Make sure to use the latest 3.x channel for RHOAI 3.4.</span></span>
+<span id="cb38-20"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -2871,7 +2853,47 @@ background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;"> Automatic</span></span></code></pre></div></div>
+font-style: inherit;"> Automatic</span></span>
+<span id="cb38-21"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> rhods-operator</span></span>
+<span id="cb38-22"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">source</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> redhat-operators</span></span>
+<span id="cb38-23"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">sourceNamespace</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> openshift-marketplace-v4.21</span></span>
+<span id="cb38-24"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">startingCSV</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> rhods-operator.3.4.0</span></span></code></pre></div></div>
 </div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb39-1"><span class="ex" style="color: null;
 background-color: null;
@@ -3243,6 +3265,198 @@ font-style: inherit;">'https://{.spec.host}{"\n"}'</span></span></code></pre></d
 </div>
 <div class="callout-body-container">
 <p><strong>Don’t rely on <code>kubeadmin</code></strong> for RHOAI day-to-day. RHOAI ties workbench ownership and pipeline runs to the logged-in user — when you eventually delete the <code>kubeadmin</code> secret, anything created by it becomes orphaned. Add an IdP before sharing the cluster.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="add-an-htpasswd-identity-provider" class="level3">
+<h3 class="anchored" data-anchor-id="add-an-htpasswd-identity-provider">7. Add an HTPasswd identity provider</h3>
+<p>On a lab cluster, the quickest way to stop leaning on <code>kubeadmin</code> is an <strong>HTPasswd</strong> identity provider — a flat file of user/bcrypt pairs that OpenShift authenticates against natively. Production clusters should prefer OIDC/LDAP/GitHub, but for a demo this is two minutes of work and unblocks the RHOAI dashboard.</p>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>The RHOAI 3.x dashboard refuses to fully render for <code>kubeadmin</code> because that account has no <code>User</code> object in <code>user.openshift.io</code> — it’s synthesised on the fly by OAuth. RHOAI’s workbench/pipeline ownership queries need a real <code>User</code>, hence the need for an HTPasswd (or any other) identity provider before the dashboard “loads normally”.</p>
+</div>
+</div>
+</div>
+<p><strong>a. Create the HTPasswd file and the secret it backs</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb43" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb43-1"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">htpasswd</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-c</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-B</span> ./htpasswd mladmin</span>
+<span id="cb43-2"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># bcrypt the password interactively, then ship the file to OpenShift:</span></span>
+<span id="cb43-3"></span>
+<span id="cb43-4"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">oc</span> create secret generic htpasswd-secret <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">\</span></span>
+<span id="cb43-5">   <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--from-file</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>htpasswd=./htpasswd <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">\</span></span>
+<span id="cb43-6">   <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-n</span> openshift-config</span></code></pre></div></div>
+<p>The <code>-B</code> flag forces bcrypt (required by OpenShift) and <code>-c</code> creates the file fresh. Drop <code>-c</code> on subsequent runs so you don’t blow away existing entries.</p>
+<p><strong>b. Wire the secret into the cluster <code>OAuth</code> CR</strong></p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>oauth-htpasswd.yaml</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb44" data-filename="oauth-htpasswd.yaml" style="background: #f1f3f5;"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb44-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">apiVersion</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> config.openshift.io/v1</span></span>
+<span id="cb44-2"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">kind</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> OAuth</span></span>
+<span id="cb44-3"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">metadata</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb44-4"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> cluster</span></span>
+<span id="cb44-5"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">spec</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb44-6"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">identityProviders</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb44-7"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> local_users</span></span>
+<span id="cb44-8"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">mappingMethod</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> claim</span></span>
+<span id="cb44-9"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">type</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> HTPasswd</span></span>
+<span id="cb44-10"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">htpasswd</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb44-11"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">fileData</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb44-12"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">          </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> htpasswd-secret</span></span></code></pre></div></div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb45" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb45-1"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">oc</span> apply <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-f</span> oauth-htpasswd.yaml</span></code></pre></div></div>
+<p><strong>c.&nbsp;Grant <code>cluster-admin</code> to the new user</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb46" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb46-1"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">oc</span> adm policy add-cluster-role-to-user cluster-admin mladmin</span></code></pre></div></div>
+<p><strong>d.&nbsp;Wait for the OAuth pods to roll, then re-login</strong></p>
+<p>The cluster operator rotates the OAuth server pods after every change to the <code>OAuth</code> CR — it takes 1–2 minutes:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb47" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb47-1"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">oc</span> get pods <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-n</span> openshift-authentication <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-w</span></span>
+<span id="cb47-2"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Ctrl-C once the new oauth-openshift-* pods are Running</span></span></code></pre></div></div>
+<p>Log out of <code>kubeadmin</code> in the OpenShift console (top-right → <em>Log out</em>), then log back in as <code>mladmin</code>. The RHOAI dashboard will now load normally and <code>mladmin</code> will own anything it creates.</p>
+<div class="callout callout-style-simple callout-tip">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>Once <code>mladmin</code> (or any real user) has <code>cluster-admin</code>, delete the bootstrap account so it can never be used again:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb48" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb48-1"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">oc</span> delete secret kubeadmin <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-n</span> kube-system</span></code></pre></div></div>
 </div>
 </div>
 </div>

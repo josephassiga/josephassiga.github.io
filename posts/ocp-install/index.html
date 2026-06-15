@@ -277,6 +277,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#install-the-red-hat-openshift-ai-operator" id="toc-install-the-red-hat-openshift-ai-operator" class="nav-link" data-scroll-target="#install-the-red-hat-openshift-ai-operator">3. Install the Red Hat OpenShift AI operator</a></li>
   <li><a href="#create-components-datasciencecluster" id="toc-create-components-datasciencecluster" class="nav-link" data-scroll-target="#create-components-datasciencecluster">4. Create components — <code>DataScienceCluster</code></a></li>
   <li><a href="#open-the-rhoai-dashboard" id="toc-open-the-rhoai-dashboard" class="nav-link" data-scroll-target="#open-the-rhoai-dashboard">6. Open the RHOAI dashboard</a></li>
+  <li><a href="#add-an-htpasswd-identity-provider" id="toc-add-an-htpasswd-identity-provider" class="nav-link" data-scroll-target="#add-an-htpasswd-identity-provider">7. Add an HTPasswd identity provider</a></li>
   </ul></li>
   <li><a href="#important-notes-best-practices" id="toc-important-notes-best-practices" class="nav-link" data-scroll-target="#important-notes-best-practices">Important notes &amp; best practices</a></li>
   <li><a href="#troubleshooting" id="toc-troubleshooting" class="nav-link" data-scroll-target="#troubleshooting">Troubleshooting</a></li>
@@ -417,7 +418,11 @@ Figure&nbsp;3: Create the public Route 53 hosted zone.
 <span id="cb3-8"><a href="#cb3-8"></a><span class="fu">sudo</span> mv oc kubectl /usr/local/bin/</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Verify before moving on:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1"></a><span class="ex">oc</span> version <span class="at">--client</span></span>
-<span id="cb4-2"><a href="#cb4-2"></a><span class="ex">kubectl</span> version <span class="at">--client</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb4-2"><a href="#cb4-2"></a><span class="ex">kubectl</span> version <span class="at">--client</span></span>
+<span id="cb4-3"><a href="#cb4-3"></a><span class="ex">Client</span> Version: 4.22.0</span>
+<span id="cb4-4"><a href="#cb4-4"></a><span class="ex">Kustomize</span> Version: v5.7.1</span>
+<span id="cb4-5"><a href="#cb4-5"></a><span class="ex">Client</span> Version: v1.35.2</span>
+<span id="cb4-6"><a href="#cb4-6"></a><span class="ex">Kustomize</span> Version: v5.7.1</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="install-the-openshift-install-binary" class="level3">
 <h3 class="anchored" data-anchor-id="install-the-openshift-install-binary">4. Install the <code>openshift-install</code> binary</h3>
@@ -1023,11 +1028,12 @@ Figure&nbsp;4: Red Hat OpenShift 4.22 web console — cluster Overview right aft
 <span id="cb38-16"><a href="#cb38-16"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> rhods-operator</span></span>
 <span id="cb38-17"><a href="#cb38-17"></a><span class="at">  </span><span class="fu">namespace</span><span class="kw">:</span><span class="at"> redhat-ods-operator</span></span>
 <span id="cb38-18"><a href="#cb38-18"></a><span class="fu">spec</span><span class="kw">:</span></span>
-<span id="cb38-19"><a href="#cb38-19"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> rhods-operator</span></span>
-<span id="cb38-20"><a href="#cb38-20"></a><span class="at">  </span><span class="fu">channel</span><span class="kw">:</span><span class="at"> stable-3.4</span></span>
-<span id="cb38-21"><a href="#cb38-21"></a><span class="at">  </span><span class="fu">source</span><span class="kw">:</span><span class="at"> redhat-operators-v4-21</span><span class="co">       # ← the CatalogSource from 3.1</span></span>
-<span id="cb38-22"><a href="#cb38-22"></a><span class="at">  </span><span class="fu">sourceNamespace</span><span class="kw">:</span><span class="at"> openshift-marketplace</span></span>
-<span id="cb38-23"><a href="#cb38-23"></a><span class="at">  </span><span class="fu">installPlanApproval</span><span class="kw">:</span><span class="at"> Automatic</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb38-19"><a href="#cb38-19"></a><span class="at">  </span><span class="fu">channel</span><span class="kw">:</span><span class="at"> stable-3.x</span><span class="co"> # Make sure to use the latest 3.x channel for RHOAI 3.4.</span></span>
+<span id="cb38-20"><a href="#cb38-20"></a><span class="at">  </span><span class="fu">installPlanApproval</span><span class="kw">:</span><span class="at"> Automatic</span></span>
+<span id="cb38-21"><a href="#cb38-21"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> rhods-operator</span></span>
+<span id="cb38-22"><a href="#cb38-22"></a><span class="at">  </span><span class="fu">source</span><span class="kw">:</span><span class="at"> redhat-operators</span></span>
+<span id="cb38-23"><a href="#cb38-23"></a><span class="at">  </span><span class="fu">sourceNamespace</span><span class="kw">:</span><span class="at"> openshift-marketplace-v4.21</span></span>
+<span id="cb38-24"><a href="#cb38-24"></a><span class="at">  </span><span class="fu">startingCSV</span><span class="kw">:</span><span class="at"> rhods-operator.3.4.0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb39-1"><a href="#cb39-1"></a><span class="ex">oc</span> apply <span class="at">-f</span> rhoai-operator.yaml</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
@@ -1103,6 +1109,65 @@ Figure&nbsp;4: Red Hat OpenShift 4.22 web console — cluster Overview right aft
 </div>
 <div class="callout-body-container">
 <p><strong>Don’t rely on <code>kubeadmin</code></strong> for RHOAI day-to-day. RHOAI ties workbench ownership and pipeline runs to the logged-in user — when you eventually delete the <code>kubeadmin</code> secret, anything created by it becomes orphaned. Add an IdP before sharing the cluster.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="add-an-htpasswd-identity-provider" class="level3">
+<h3 class="anchored" data-anchor-id="add-an-htpasswd-identity-provider">7. Add an HTPasswd identity provider</h3>
+<p>On a lab cluster, the quickest way to stop leaning on <code>kubeadmin</code> is an <strong>HTPasswd</strong> identity provider — a flat file of user/bcrypt pairs that OpenShift authenticates against natively. Production clusters should prefer OIDC/LDAP/GitHub, but for a demo this is two minutes of work and unblocks the RHOAI dashboard.</p>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>The RHOAI 3.x dashboard refuses to fully render for <code>kubeadmin</code> because that account has no <code>User</code> object in <code>user.openshift.io</code> — it’s synthesised on the fly by OAuth. RHOAI’s workbench/pipeline ownership queries need a real <code>User</code>, hence the need for an HTPasswd (or any other) identity provider before the dashboard “loads normally”.</p>
+</div>
+</div>
+</div>
+<p><strong>a. Create the HTPasswd file and the secret it backs</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb43"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb43-1"><a href="#cb43-1"></a><span class="ex">htpasswd</span> <span class="at">-c</span> <span class="at">-B</span> ./htpasswd mladmin</span>
+<span id="cb43-2"><a href="#cb43-2"></a><span class="co"># bcrypt the password interactively, then ship the file to OpenShift:</span></span>
+<span id="cb43-3"><a href="#cb43-3"></a></span>
+<span id="cb43-4"><a href="#cb43-4"></a><span class="ex">oc</span> create secret generic htpasswd-secret <span class="dt">\</span></span>
+<span id="cb43-5"><a href="#cb43-5"></a>   <span class="at">--from-file</span><span class="op">=</span>htpasswd=./htpasswd <span class="dt">\</span></span>
+<span id="cb43-6"><a href="#cb43-6"></a>   <span class="at">-n</span> openshift-config</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The <code>-B</code> flag forces bcrypt (required by OpenShift) and <code>-c</code> creates the file fresh. Drop <code>-c</code> on subsequent runs so you don’t blow away existing entries.</p>
+<p><strong>b. Wire the secret into the cluster <code>OAuth</code> CR</strong></p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>oauth-htpasswd.yaml</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb44" data-filename="oauth-htpasswd.yaml"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb44-1"><a href="#cb44-1"></a><span class="fu">apiVersion</span><span class="kw">:</span><span class="at"> config.openshift.io/v1</span></span>
+<span id="cb44-2"><a href="#cb44-2"></a><span class="fu">kind</span><span class="kw">:</span><span class="at"> OAuth</span></span>
+<span id="cb44-3"><a href="#cb44-3"></a><span class="fu">metadata</span><span class="kw">:</span></span>
+<span id="cb44-4"><a href="#cb44-4"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> cluster</span></span>
+<span id="cb44-5"><a href="#cb44-5"></a><span class="fu">spec</span><span class="kw">:</span></span>
+<span id="cb44-6"><a href="#cb44-6"></a><span class="at">  </span><span class="fu">identityProviders</span><span class="kw">:</span></span>
+<span id="cb44-7"><a href="#cb44-7"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> local_users</span></span>
+<span id="cb44-8"><a href="#cb44-8"></a><span class="at">      </span><span class="fu">mappingMethod</span><span class="kw">:</span><span class="at"> claim</span></span>
+<span id="cb44-9"><a href="#cb44-9"></a><span class="at">      </span><span class="fu">type</span><span class="kw">:</span><span class="at"> HTPasswd</span></span>
+<span id="cb44-10"><a href="#cb44-10"></a><span class="at">      </span><span class="fu">htpasswd</span><span class="kw">:</span></span>
+<span id="cb44-11"><a href="#cb44-11"></a><span class="at">        </span><span class="fu">fileData</span><span class="kw">:</span></span>
+<span id="cb44-12"><a href="#cb44-12"></a><span class="at">          </span><span class="fu">name</span><span class="kw">:</span><span class="at"> htpasswd-secret</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb45"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb45-1"><a href="#cb45-1"></a><span class="ex">oc</span> apply <span class="at">-f</span> oauth-htpasswd.yaml</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>c.&nbsp;Grant <code>cluster-admin</code> to the new user</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb46"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb46-1"><a href="#cb46-1"></a><span class="ex">oc</span> adm policy add-cluster-role-to-user cluster-admin mladmin</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>d.&nbsp;Wait for the OAuth pods to roll, then re-login</strong></p>
+<p>The cluster operator rotates the OAuth server pods after every change to the <code>OAuth</code> CR — it takes 1–2 minutes:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb47"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb47-1"><a href="#cb47-1"></a><span class="ex">oc</span> get pods <span class="at">-n</span> openshift-authentication <span class="at">-w</span></span>
+<span id="cb47-2"><a href="#cb47-2"></a><span class="co"># Ctrl-C once the new oauth-openshift-* pods are Running</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Log out of <code>kubeadmin</code> in the OpenShift console (top-right → <em>Log out</em>), then log back in as <code>mladmin</code>. The RHOAI dashboard will now load normally and <code>mladmin</code> will own anything it creates.</p>
+<div class="callout callout-style-simple callout-tip">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>Once <code>mladmin</code> (or any real user) has <code>cluster-admin</code>, delete the bootstrap account so it can never be used again:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb48"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb48-1"><a href="#cb48-1"></a><span class="ex">oc</span> delete secret kubeadmin <span class="at">-n</span> kube-system</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 </div>
