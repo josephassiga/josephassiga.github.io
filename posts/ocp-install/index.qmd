@@ -955,6 +955,39 @@ oc delete secret kubeadmin -n kube-system
 ```
 :::
 
+### 8. Inside the RHOAI dashboard
+
+Logging back in as `mladmin` and hitting the `rhods-dashboard` Route
+lands on the RHOAI **Home** view. This is the first place to sanity-check
+that every `DataScienceCluster` component you enabled in step 4 came up —
+each section in the left rail corresponds to one `managementState: Managed`
+entry from `dsc.yaml`.
+
+![Red Hat OpenShift AI 3.4 dashboard — landing page right after install, logged in as `mladmin`.](/images/rhoai-console.png){#fig-rhoai-console fig-align="center" width="100%"}
+
+A few things worth noticing in @fig-rhoai-console:
+
+- **Left navigation** — *Data science projects*, *Workbenches*,
+  *Pipelines*, *Distributed workloads*, *Models*, *Resources*,
+  *Settings*. A missing entry means the matching `DataScienceCluster`
+  component is `Removed` instead of `Managed` — re-apply `dsc.yaml` to
+  enable it.
+- **Top-right user menu** — should read `mladmin`, not `kubeadmin`. If
+  you still see `kubeadmin`, the OAuth pods from step 7 haven't rolled
+  yet (`oc get pods -n openshift-authentication -w`).
+- **Settings → User management** — only visible because `mladmin` has
+  `cluster-admin`. This is where you grant `data scientist` / `admin`
+  roles to other HTPasswd users without giving them full cluster
+  privileges.
+
+::: {.callout-tip appearance="simple"}
+The first thing most RHOAI walkthroughs do from this screen is *Data
+science projects → Create project* and then *Create workbench* with a
+PyTorch image — that exercises the workbench controller, the PVC
+provisioner, and (if you picked a GPU image) the NVIDIA device plugin
+in one shot.
+:::
+
 ## Important notes & best practices
 
 - Replace `OCP_VERSION` with a specific release for reproducible runs.
