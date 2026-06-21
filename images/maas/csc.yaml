@@ -1,0 +1,41 @@
+apiVersion: serving.kserve.io/v1alpha1
+kind: ClusterStorageContainer
+metadata:
+  name: custom-gated-hf-downloader
+  labels:
+    app.kubernetes.io/part-of: kserve
+    app.opendatahub.io/kserve: 'true'
+    platform.opendatahub.io/part-of: kserve
+  annotations:
+    platform.opendatahub.io/type: "OpenShift AI Self-Managed"
+    platform.opendatahub.io/version: "3.4.0"
+spec:
+  container:
+    # Uses the same certified Red Hat storage initializer image as your default blueprint
+    image: 'registry.redhat.io/rhoai/odh-kserve-storage-initializer-rhel9@sha256:b73f3818b1c3b6f57d9cac6b975552c5888bf9c0d37df6c50938fd4988d2012b'
+    imagePullPolicy: IfNotPresent
+    name: storage-initializer
+    # --- HERE WE FORCED-INJECT THE RUNTIME STREAMS & SECRET ---
+    env:
+      - name: HF_HUB_ENABLE_HF_TRANSFER
+        value: "0"  # Forces native Python chunk streaming (Bypasses Errno 13 permissions)
+      - name: HF_HUB_DISABLE_SYMLINKS_WARNING
+        value: "true"
+      - name: HF_TOKEN
+        valueFrom:
+          secretKeyRef:
+            name: hf-llama-token  # Securely maps your namespace credential secret
+            key: HF_TOKEN
+    resources:
+      limits:
+        cpu: '1'
+        # Kept at 24Gi to ensure plenty of RAM overhead when parsing large Llama-4 file indices
+        memory: 24Gi
+      requests:
+        cpu: 100m
+        memory: 100Mi
+  # --- CUSTOM PREFIX SO IT NEVER COLLIDES WITH THE CLUSTER DEFAULT ---
+  supportedUriFormats:
+    - prefix: 'hf-gated://'
+  supportsMultiModelDownload: false
+  workloadType: initContainer
