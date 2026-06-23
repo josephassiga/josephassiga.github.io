@@ -10,7 +10,643 @@
 <atom:link href="https://josephassiga.github.io/blog.xml" rel="self" type="application/rss+xml"/>
 <description>Long-form technical analyses, architecture notes, and product explorations focused on cloud platforms, OpenShift, and distributed systems.</description>
 <generator>quarto-1.9.38</generator>
-<lastBuildDate>Wed, 10 Jun 2026 00:00:00 GMT</lastBuildDate>
+<lastBuildDate>Wed, 24 Jun 2026 00:00:00 GMT</lastBuildDate>
+<item>
+  <title>ABOM: a bill of materials for AI agents — block the action, sign the proof, hand it to the auditor</title>
+  <dc:creator>Joseph Assiga</dc:creator>
+  <link>https://josephassiga.github.io/posts/abom/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p><strong>TL;DR</strong> — An AI agent is a black box that now writes to systems and moves money. ABOM (<a href="https://pypi.org/project/abom-cli/"><code>pip install abom-cli</code></a>) gives it three things: a signed <em>Composition Manifest</em> (what it’s made of), an inline <em>gate</em> that <strong>denies</strong> any tool call outside that manifest <strong>before it runs</strong>, and a <em>Notary</em> — a Certificate-Transparency-style Merkle log — that lets an auditor verify what happened <strong>without trusting the operator</strong>. Open source, Apache-2.0, runs offline. Below: how it works, the cryptography that makes it more than a dashboard, and where it honestly is today (draft v0.1).</p>
+</div>
+</div>
+</div>
+<section id="why-this-matters" class="level2">
+<h2 class="anchored" data-anchor-id="why-this-matters">Why this matters</h2>
+<blockquote class="blockquote">
+<p>Your SIEM tells you the agent wired money to an attacker <em>yesterday</em>. That’s a log. A control stops the call <em>before</em> it executes — and proves it stopped it.</p>
+</blockquote>
+<p>Agentic AI crossed a line in 2025–26: agents stopped <em>suggesting</em> and started <em>acting</em>. They call tools, hit internal APIs, read confidential records, and — in the worst case — move money. Meanwhile the institutions running them are legally accountable for what their software does.</p>
+<p>Three gaps fall out of that, and none of them have a clean answer today:</p>
+<ol type="1">
+<li><strong>Composition is opaque.</strong> No one can say, in <em>one signed document</em>, which models, tools, prompts, data sources and policies an agent is built from — or prove the deployed agent matches what was approved.</li>
+<li><strong>Actions are unaccountable.</strong> When an agent makes a consequential decision, the evidence is scattered application logs you have to <em>trust</em> — not a tamper-evident record you can <em>verify</em> and hand to a regulator.</li>
+<li><strong>Nothing stops a bad action.</strong> A prompt-injected agent that calls a tool it was never authorized to use is, in most stacks, only <em>logged after the fact</em>.</li>
+</ol>
+<p>We did this once before for software: the <strong>SBOM</strong> (Software Bill of Materials) went from nice-to-have to mandated in about three years. <a href="https://cyclonedx.org/capabilities/mlbom/">CycloneDX</a> even shipped an <strong>ML-BOM</strong> for models. ABOM — the <em>Agent</em> Bill of Materials — is the obvious next step: extend that standard to full agents, and add the runtime layer SBOMs never had.</p>
+</section>
+<section id="the-three-questions" class="level2">
+<h2 class="anchored" data-anchor-id="the-three-questions">The three questions</h2>
+<p>Every capability in ABOM maps to a question a risk team actually asks about an agent:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Question</th>
+<th>ABOM answer</th>
+<th>Mechanism</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>What is it <strong>made of</strong>?</td>
+<td>Composition Manifest</td>
+<td><code>abom scan</code> → a signed inventory</td>
+</tr>
+<tr class="even">
+<td>What is it <strong>allowed to do</strong>?</td>
+<td>The inline gate</td>
+<td>deny-by-default, <em>before</em> execution</td>
+</tr>
+<tr class="odd">
+<td>What did it <strong>actually do</strong>?</td>
+<td>Provenance + Notary</td>
+<td>Merkle-notarized, verifiable proofs</td>
+</tr>
+</tbody>
+</table>
+<p>If you’re non-technical, the analogy is: a <strong>nutrition label</strong>, a <strong>permission slip</strong>, and a <strong>flight recorder</strong> — all signed so none of them can be faked.</p>
+</section>
+<section id="what-the-agent-is-made-of-the-signed-manifest" class="level2">
+<h2 class="anchored" data-anchor-id="what-the-agent-is-made-of-the-signed-manifest">1. What the agent is made of — the signed manifest</h2>
+<p><code>abom scan</code> walks a repo’s dependencies and source and emits a <strong>Composition Manifest</strong>: every model (with weight hashes), tool, prompt, data source, policy, framework and MCP server it can find, each <code>ed25519</code>-signed.</p>
+<p>Here’s a trimmed manifest for a fictional loan-document agent:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode numberSource json number-lines code-with-copy"><code class="sourceCode json"><span id="cb1-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb1-2">  <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"abom"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"0.1"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">,</span></span>
+<span id="cb1-3">  <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"extends"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"CycloneDX ML-BOM"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">,</span></span>
+<span id="cb1-4">  <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"type"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"CompositionManifest"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">,</span></span>
+<span id="cb1-5">  <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"agent"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">{</span> <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"name"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"loan-doc-agent"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">,</span> <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"version"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"1.4.0"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">,</span> <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"risk_class"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"high (Annex III)"</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">},</span></span>
+<span id="cb1-6">  <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"components"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">[</span></span>
+<span id="cb1-7">    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">{</span> <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"type"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"model"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">,</span> <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"name"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"local/qwen2.5-coder"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">,</span> <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"weights_sha256"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"9f2c…"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">,</span> <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"egress"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">false</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">}</span><span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">,</span></span>
+<span id="cb1-8">    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">{</span> <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"type"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"tool"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">,</span> <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"name"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"read_kyc_doc"</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">}</span><span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">,</span></span>
+<span id="cb1-9">    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">{</span> <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"type"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"tool"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">,</span> <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"name"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"http_fetch"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">,</span> <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"scope"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"egress"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">,</span> <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"allowed_endpoints"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">[</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"internal-kyc.bank"</span><span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">]</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">}</span></span>
+<span id="cb1-10">  <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">]</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">,</span></span>
+<span id="cb1-11">  <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"controls"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">{</span> <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"egress"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"deny-by-default"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">,</span> <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"residency"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"EU"</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">},</span></span>
+<span id="cb1-12">  <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"composition_sha256"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"411d…"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">,</span></span>
+<span id="cb1-13">  <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"signature"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">{</span> <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"alg"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"ed25519"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">,</span> <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"value"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"…"</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">}</span></span>
+<span id="cb1-14"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">}</span></span></code></pre></div></div>
+<p>The <code>composition_sha256</code> is the <strong>join key</strong>: every runtime record points back to the exact manifest it ran under, so a swapped model or a shadow tool at runtime shows up as drift.</p>
+</section>
+<section id="what-the-agent-is-allowed-to-do-block-dont-just-log" class="level2">
+<h2 class="anchored" data-anchor-id="what-the-agent-is-allowed-to-do-block-dont-just-log">2. What the agent is allowed to do — block, don’t just log</h2>
+<p>This is the part that turns a <em>bill of materials</em> into a <em>control</em>. The gate sits at the tool-call boundary. Before an action runs, it decides <strong>ALLOW</strong> or <strong>DENY</strong> against the signed manifest — and it is <strong>deny-by-default</strong>: a tool that isn’t in the manifest is blocked, not logged-and-allowed.</p>
+<p>It’s framework-agnostic. The cleanest integration is a decorator:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> abom <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> Gate, Action, ActionDenied</span>
+<span id="cb2-2"></span>
+<span id="cb2-3">gate <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> Gate(signed_manifest, run_id<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"loan-doc-agent@1.4.0"</span>)</span>
+<span id="cb2-4"></span>
+<span id="cb2-5"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">@gate.gated</span>()                       <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># wrap any tool</span></span>
+<span id="cb2-6"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> wire_transfer(amount, to):</span>
+<span id="cb2-7">    ...                             <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># this body NEVER runs if wire_transfer</span></span>
+<span id="cb2-8">                                    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># isn't declared in the signed manifest</span></span>
+<span id="cb2-9"></span>
+<span id="cb2-10"><span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">try</span>:</span>
+<span id="cb2-11">    wire_transfer(<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1_000_000</span>, to<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"attacker-iban"</span>)   <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># a prompt injection</span></span>
+<span id="cb2-12"><span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">except</span> ActionDenied <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">as</span> e:</span>
+<span id="cb2-13">    <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">print</span>(e.decision.rule)          <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># → "tool_not_in_manifest"</span></span>
+<span id="cb2-14">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># the money never moved, and the denial is notarized</span></span></code></pre></div></div>
+<div class="callout callout-style-simple callout-tip">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>The gate ships three decidable rules, evaluated in order (first failure wins): <code>tool_not_in_manifest</code>, <code>endpoint_not_allowed</code> (egress outside a tool’s allowlist), and <code>residency</code> (confidential data leaving via an egress tool).</p>
+</div>
+</div>
+</div>
+<section id="the-demo-end-to-end" class="level3">
+<h3 class="anchored" data-anchor-id="the-demo-end-to-end">The demo, end to end</h3>
+<p>The repo ships a <code>gate_demo.py</code> that tells the whole story. Here’s the real output — an agent doing legitimate work, then getting prompt-injected:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode numberSource text number-lines code-with-copy"><code class="sourceCode"><span id="cb3-1">[1] Agent reads a KYC document (declared tool)</span>
+<span id="cb3-2">    → ALLOW  (manifest_allows)</span>
+<span id="cb3-3"></span>
+<span id="cb3-4">[2] Agent fetches from internal-kyc.bank (allowed endpoint)</span>
+<span id="cb3-5">    → ALLOW  (manifest_allows)</span>
+<span id="cb3-6"></span>
+<span id="cb3-7">[3] ⚠  Prompt injection: agent calls wire_transfer($1,000,000)</span>
+<span id="cb3-8">        (wire_transfer is NOT in the signed manifest)</span>
+<span id="cb3-9">    → DENY  (tool_not_in_manifest)</span>
+<span id="cb3-10">      tool 'wire_transfer' is not in the signed Composition Manifest</span>
+<span id="cb3-11">      the money never moved — the call was blocked before execution</span>
+<span id="cb3-12"></span>
+<span id="cb3-13">[4] Agent tries http_fetch → evil.example.com (not on allowlist)</span>
+<span id="cb3-14">    → DENY  (endpoint_not_allowed)</span></code></pre></div></div>
+<p>The same logic is available as a CLI exit code, so it drops straight into CI or agent middleware — <code>0</code> for ALLOW, <code>1</code> for DENY:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">abom</span> gate abom.json <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--tool</span> read_kyc_doc      <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># → ALLOW, exit 0</span></span>
+<span id="cb4-2"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">abom</span> gate abom.json <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--tool</span> wire_transfer     <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># → DENY,  exit 1</span></span></code></pre></div></div>
+</section>
+</section>
+<section id="what-the-agent-actually-did-a-notary-you-can-verify" class="level2">
+<h2 class="anchored" data-anchor-id="what-the-agent-actually-did-a-notary-you-can-verify">3. What the agent actually did — a Notary you can verify</h2>
+<p>Here’s where it gets interesting, and where most “audit log” products quietly fall short.</p>
+<p>A linked hash chain proves <em>internal consistency</em> — but an operator who controls the store can <strong>recompute the entire chain from genesis</strong> after editing a record. So a plain chain proves nothing to a third party who doesn’t trust the operator. That third party — an auditor, a regulator, a cyber-insurer — is exactly who the record is <em>for</em>.</p>
+<p>ABOM’s Notary uses an <strong>append-only Merkle transparency log</strong>: the same <a href="https://datatracker.ietf.org/doc/html/rfc6962">RFC 6962 / Certificate Transparency</a> construction that underpins the web’s certificate ecosystem. It gives you two proofs that need <strong>no trust in the operator</strong>:</p>
+<ul>
+<li><strong>Inclusion proof</strong> — “this decision is in the log, at this position, under this signed tree head” (an <code>O(log n)</code> audit path).</li>
+<li><strong>Consistency proof</strong> — “the log of size <em>m</em> is a prefix of the log of size <em>n</em>; nothing already published was edited or deleted.”</li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb5-1"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> abom <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> verify_inclusion_hex, verify_payload</span>
+<span id="cb5-2"></span>
+<span id="cb5-3">decision <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> gate.check(action)</span>
+<span id="cb5-4"></span>
+<span id="cb5-5">verify_inclusion_hex(entry, decision.inclusion_proof)   <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># → True</span></span>
+<span id="cb5-6">verify_payload(head, decision.head_signature)           <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># signed tree head → True</span></span></code></pre></div></div>
+<p>Running the demo’s verification stage against a real run:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode numberSource text number-lines code-with-copy"><code class="sourceCode"><span id="cb6-1">  decisions notarized : 4</span>
+<span id="cb6-2">  transparency log    : size=4  root=b63298020ffc410824e941ef…</span>
+<span id="cb6-3"></span>
+<span id="cb6-4">  auditor checks the wire_transfer denial (seq 2):</span>
+<span id="cb6-5">    inclusion proof valid : True   (it IS in the signed log)</span>
+<span id="cb6-6">    tree-head signature   : True   (signed by local key 7f7aa8d6efabb18f)</span>
+<span id="cb6-7"></span>
+<span id="cb6-8">  attacker tries to backdate the record (flip DENY → allow):</span>
+<span id="cb6-9">    forged record included : False   (rejected — the proof no longer matches)</span></code></pre></div></div>
+<p>That last line is the whole point: you can’t quietly flip a <code>DENY</code> to an <code>allow</code> after the fact. The forged entry no longer satisfies the inclusion proof, and the signed tree head won’t validate. <strong>The trust is cryptographic, not reputational.</strong></p>
+<div class="callout callout-style-simple callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Key custody is the real blocker, and it’s handled as a seam
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>A demo that signs with a plaintext key on disk is rejected by any bank’s security team on sight — and it makes the tamper-evidence claim <em>false</em>, since whoever holds the key can forge tree heads. ABOM puts signing behind a <code>Signer</code> protocol: <code>LocalSigner</code> for dev/CI, and a <code>KMSSigner</code> seam where the private key lives in a <strong>KMS/HSM and never leaves it</strong>. Verification is backend-independent, so an auditor checks the same <code>ed25519</code> signature regardless of where the key was held.</p>
+</div>
+</div>
+</section>
+<section id="how-it-fits-together" class="level2">
+<h2 class="anchored" data-anchor-id="how-it-fits-together">How it fits together</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode numberSource text number-lines code-with-copy"><code class="sourceCode"><span id="cb7-1">        CUSTOMER TRUST BOUNDARY (your infra, air-gap capable)</span>
+<span id="cb7-2">  ┌───────────────────────────────────────────────────────────┐</span>
+<span id="cb7-3">  │  agent runtime (any framework: LangGraph / CrewAI / MCP)   │</span>
+<span id="cb7-4">  │        │                                                   │</span>
+<span id="cb7-5">  │        ▼                                                   │</span>
+<span id="cb7-6">  │   abom scan ──▶ the gate ──▶ the Notary                    │</span>
+<span id="cb7-7">  │   signed         deny-by-       Merkle log: inclusion +    │</span>
+<span id="cb7-8">  │   Manifest       default,       consistency proofs,        │</span>
+<span id="cb7-9">  │  (composition    BEFORE         signed tree heads (KMS)    │</span>
+<span id="cb7-10">  │   _sha256)       execution                                 │</span>
+<span id="cb7-11">  └───────────────────────────────────────────────────────────┘</span>
+<span id="cb7-12">   keys in KMS/HSM · ed25519 — trust is in the keys + proofs</span></code></pre></div></div>
+<p>Scan an agent → gate every tool call against its signed manifest → notarize every decision into a log anyone can verify.</p>
+</section>
+<section id="where-this-sits-next-to-cyclonedx" class="level2">
+<h2 class="anchored" data-anchor-id="where-this-sits-next-to-cyclonedx">Where this sits next to CycloneDX</h2>
+<p>ABOM <strong>extends</strong> CycloneDX ML-BOM rather than forking it — it rides the dominant, ECMA-standardized SBOM format. CycloneDX answers <em>“what is it made of.”</em> ABOM adds the runtime enforcement and provenance layer it doesn’t model. Component types map across (<code>model</code> → <code>machine-learning-model</code>, <code>tool</code> → <code>service</code>/<code>application</code>, and so on); the gate, the hash chain and the Merkle Notary are ABOM-only additions.</p>
+<p>The <code>"extends": "CycloneDX ML-BOM"</code> lineage is declared on every document today; a <em>native</em> CycloneDX import/export is on the roadmap, not yet shipped — which brings us to the honest part.</p>
+</section>
+<section id="status" class="level2">
+<h2 class="anchored" data-anchor-id="status">Build status — what’s real vs.&nbsp;roadmap</h2>
+<p>Honesty about maturity is a feature for a trust project. ABOM is <strong>draft v0.1</strong>, pre-1.0. As of this writing:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Capability</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>abom scan</code> → signed Composition Manifest</td>
+<td>✅ Built</td>
+</tr>
+<tr class="even">
+<td>Hash-chained Action Provenance + verification</td>
+<td>✅ Built</td>
+</tr>
+<tr class="odd">
+<td><code>ed25519</code> signing (<code>LocalSigner</code>)</td>
+<td>✅ Built</td>
+</tr>
+<tr class="even">
+<td>Inline gate — deny-by-default enforcement</td>
+<td>✅ Built</td>
+</tr>
+<tr class="odd">
+<td>Merkle transparency log — inclusion + consistency proofs</td>
+<td>✅ Built</td>
+</tr>
+<tr class="even">
+<td>Decidable policy checks (<code>abom verify</code>)</td>
+<td>✅ Built</td>
+</tr>
+<tr class="odd">
+<td>KMS/HSM-backed signing (<code>KMSSigner</code> seam)</td>
+<td>🚧 In construction</td>
+</tr>
+<tr class="even">
+<td>OPA/Rego policy engine (currently JSON)</td>
+<td>🚧 In construction</td>
+</tr>
+<tr class="odd">
+<td>Hardened, queryable Notary registry + API</td>
+<td>🚧 In construction</td>
+</tr>
+<tr class="even">
+<td>SDK runtime hooks / framework adapters</td>
+<td>🚧 In construction</td>
+</tr>
+<tr class="odd">
+<td>Native CycloneDX / SIEM export · eBPF egress · air-gap bundle</td>
+<td>📋 Planned</td>
+</tr>
+</tbody>
+</table>
+<div class="callout callout-style-simple callout-warning">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>Two things I’d <em>not</em> over-claim. <strong>Completeness:</strong> the gate only mediates the tool calls routed through it — it doesn’t magically observe egress it can’t see, so the manifest declares its own capture boundary rather than pretending to catch everything. <strong>The regulation timeline:</strong> the EU AI Act’s high-risk record-keeping obligations (Art. 12) were deferred to ~Dec 2027 by the Digital Omnibus, and DORA doesn’t literally mandate an agent BOM. The regulatory tailwind is real, but it’s the <em>inevitability</em> slide — not the reason to adopt this today. The reason to adopt it today is that your agents are already taking actions you can’t bound.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="try-it" class="level2">
+<h2 class="anchored" data-anchor-id="try-it">Try it</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">pip</span> install abom-cli</span>
+<span id="cb8-2"></span>
+<span id="cb8-3"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">abom</span> scan .                                <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># → signed abom.json</span></span>
+<span id="cb8-4"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">abom</span> verify abom.json <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--policy</span> policy.json <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># enforce policy (exit 1 on violations)</span></span>
+<span id="cb8-5"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">abom</span> gate abom.json <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--tool</span> wire_transfer   <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># deny-by-default, notarized (exit 1)</span></span></code></pre></div></div>
+<p>Or from source, to run the full walkthrough:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">git</span> clone https://github.com/josephassiga/abom-dev</span>
+<span id="cb9-2"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">cd</span> abom-dev/cli <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">&amp;&amp;</span> <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">pip</span> install <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-e</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">".[dev]"</span></span>
+<span id="cb9-3"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">pytest</span> tests/ <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-q</span>                           <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 55 passing, incl. RFC 6962 Merkle proofs</span></span>
+<span id="cb9-4"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">python</span> demo/gate_demo.py                   <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># prompt-injection → blocked → notarized → audited</span></span></code></pre></div></div>
+</section>
+<section id="closing-thought" class="level2">
+<h2 class="anchored" data-anchor-id="closing-thought">Closing thought</h2>
+<p>The market is racing to make agents <em>do more</em>. ABOM is a bet on the unglamorous layer underneath: making an agent <strong>answerable and controllable</strong> — <em>what is it made of, what is it allowed to do, and what did it do?</em> — answered in a signed, standard, portable artifact you can hand to an auditor.</p>
+<p>Underneath the software, it’s really a trust primitive. And the trust is cryptographic, not reputational — which, for anything an autonomous agent is allowed to do with your money, is the only kind that should count.</p>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>ABOM is open source (Apache-2.0) and a work in progress. Code, spec and the demo live at <a href="https://github.com/josephassiga/abom-dev">github.com/josephassiga/abom-dev</a>; the package is <a href="https://pypi.org/project/abom-cli/"><code>abom-cli</code></a> on PyPI. Feedback and spec proposals welcome.</p>
+</div>
+</div>
+</div>
+
+
+</section>
+
+ ]]></description>
+  <category>ai</category>
+  <category>security</category>
+  <category>agents</category>
+  <category>supply-chain</category>
+  <category>compliance</category>
+  <category>devops</category>
+  <guid>https://josephassiga.github.io/posts/abom/</guid>
+  <pubDate>Wed, 24 Jun 2026 00:00:00 GMT</pubDate>
+  <media:content url="https://josephassiga.github.io/images/abom.svg" medium="image" type="image/svg+xml"/>
+</item>
 <item>
   <title>Installing Red Hat OpenShift AI Self-Managed 3.4(latest) in Red Hat Openshift 4.22(latest) on AWS: A Shell-Based Guide</title>
   <dc:creator>Joseph Assiga</dc:creator>

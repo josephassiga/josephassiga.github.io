@@ -2,18 +2,22 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://josephassiga.github.io/index.html</loc>
-    <lastmod>2026-06-21T17:12:58.233Z</lastmod>
+    <lastmod>2026-06-23T22:23:55.824Z</lastmod>
   </url>
   <url>
     <loc>https://josephassiga.github.io/about.html</loc>
-    <lastmod>2026-06-21T17:12:58.226Z</lastmod>
+    <lastmod>2026-06-23T22:23:55.816Z</lastmod>
   </url>
   <url>
     <loc>https://josephassiga.github.io/posts/ocp-install/index.html</loc>
-    <lastmod>2026-06-21T17:12:58.235Z</lastmod>
+    <lastmod>2026-06-23T22:23:55.825Z</lastmod>
+  </url>
+  <url>
+    <loc>https://josephassiga.github.io/posts/abom/index.html</loc>
+    <lastmod>2026-06-23T22:23:55.825Z</lastmod>
   </url>
   <url>
     <loc>https://josephassiga.github.io/blog.html</loc>
-    <lastmod>2026-06-21T17:12:58.227Z</lastmod>
+    <lastmod>2026-06-23T22:23:55.817Z</lastmod>
   </url>
 </urlset>

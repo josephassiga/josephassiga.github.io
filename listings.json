@@ -2,12 +2,14 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/abom/index.html",
       "/posts/ocp-install/index.html"
     ]
   },
   {
     "listing": "/blog.html",
     "items": [
+      "/posts/abom/index.html",
       "/posts/ocp-install/index.html"
     ]
   }
