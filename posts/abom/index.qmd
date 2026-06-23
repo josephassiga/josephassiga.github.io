@@ -1,0 +1,325 @@
+---
+title: "ABOM: a bill of materials for AI agents — block the action, sign the proof, hand it to the auditor"
+description: |
+  AI agents now take consequential actions inside regulated systems, but nobody
+  can say in one signed document what an agent is made of, what it's allowed to
+  do, or prove what it actually did. ABOM is an open-source attempt to fix that:
+  a signed Composition Manifest, an inline deny-by-default gate that blocks
+  unauthorized tool calls before they run, and a Merkle transparency-log Notary
+  whose results an auditor can verify without trusting the operator.
+author:
+  - name: Joseph Assiga
+    url: https://josephassiga.github.io/about.html
+    affiliation: Independent
+date: 2026-06-24
+date-modified: 2026-06-24
+categories: [ai, security, agents, supply-chain, compliance, devops]
+image: /images/abom.svg
+image-alt: "ABOM — Agent Bill of Materials banner"
+keywords: [ABOM, AI agents, agent security, SBOM, ML-BOM, CycloneDX, EU AI Act, DORA, Merkle tree, Certificate Transparency, ed25519, provenance, prompt injection]
+format:
+  html:
+    toc: true
+    code-line-numbers: true
+---
+
+::: {.callout-note appearance="simple"}
+**TL;DR** — An AI agent is a black box that now writes to systems and moves
+money. ABOM ([`pip install abom-cli`](https://pypi.org/project/abom-cli/)) gives
+it three things: a signed *Composition Manifest* (what it's made of), an inline
+*gate* that **denies** any tool call outside that manifest **before it runs**, and
+a *Notary* — a Certificate-Transparency-style Merkle log — that lets an auditor
+verify what happened **without trusting the operator**. Open source, Apache-2.0,
+runs offline. Below: how it works, the cryptography that makes it more than a
+dashboard, and where it honestly is today (draft v0.1).
+:::
+
+## Why this matters
+
+> Your SIEM tells you the agent wired money to an attacker *yesterday*. That's a
+> log. A control stops the call *before* it executes — and proves it stopped it.
+
+Agentic AI crossed a line in 2025–26: agents stopped *suggesting* and started
+*acting*. They call tools, hit internal APIs, read confidential records, and —
+in the worst case — move money. Meanwhile the institutions running them are
+legally accountable for what their software does.
+
+Three gaps fall out of that, and none of them have a clean answer today:
+
+1. **Composition is opaque.** No one can say, in *one signed document*, which
+   models, tools, prompts, data sources and policies an agent is built from — or
+   prove the deployed agent matches what was approved.
+2. **Actions are unaccountable.** When an agent makes a consequential decision,
+   the evidence is scattered application logs you have to *trust* — not a
+   tamper-evident record you can *verify* and hand to a regulator.
+3. **Nothing stops a bad action.** A prompt-injected agent that calls a tool it
+   was never authorized to use is, in most stacks, only *logged after the fact*.
+
+We did this once before for software: the **SBOM** (Software Bill of Materials)
+went from nice-to-have to mandated in about three years. [CycloneDX](https://cyclonedx.org/capabilities/mlbom/)
+even shipped an **ML-BOM** for models. ABOM — the *Agent* Bill of Materials — is
+the obvious next step: extend that standard to full agents, and add the runtime
+layer SBOMs never had.
+
+## The three questions
+
+Every capability in ABOM maps to a question a risk team actually asks about an
+agent:
+
+| Question | ABOM answer | Mechanism |
+|---|---|---|
+| What is it **made of**? | Composition Manifest | `abom scan` → a signed inventory |
+| What is it **allowed to do**? | The inline gate | deny-by-default, *before* execution |
+| What did it **actually do**? | Provenance + Notary | Merkle-notarized, verifiable proofs |
+
+If you're non-technical, the analogy is: a **nutrition label**, a **permission
+slip**, and a **flight recorder** — all signed so none of them can be faked.
+
+## 1. What the agent is made of — the signed manifest
+
+`abom scan` walks a repo's dependencies and source and emits a **Composition
+Manifest**: every model (with weight hashes), tool, prompt, data source, policy,
+framework and MCP server it can find, each `ed25519`-signed.
+
+Here's a trimmed manifest for a fictional loan-document agent:
+
+```json
+{
+  "abom": "0.1",
+  "extends": "CycloneDX ML-BOM",
+  "type": "CompositionManifest",
+  "agent": { "name": "loan-doc-agent", "version": "1.4.0", "risk_class": "high (Annex III)" },
+  "components": [
+    { "type": "model", "name": "local/qwen2.5-coder", "weights_sha256": "9f2c…", "egress": false },
+    { "type": "tool", "name": "read_kyc_doc" },
+    { "type": "tool", "name": "http_fetch", "scope": "egress", "allowed_endpoints": ["internal-kyc.bank"] }
+  ],
+  "controls": { "egress": "deny-by-default", "residency": "EU" },
+  "composition_sha256": "411d…",
+  "signature": { "alg": "ed25519", "value": "…" }
+}
+```
+
+The `composition_sha256` is the **join key**: every runtime record points back to
+the exact manifest it ran under, so a swapped model or a shadow tool at runtime
+shows up as drift.
+
+## 2. What the agent is allowed to do — block, don't just log
+
+This is the part that turns a *bill of materials* into a *control*. The gate sits
+at the tool-call boundary. Before an action runs, it decides **ALLOW** or
+**DENY** against the signed manifest — and it is **deny-by-default**: a tool that
+isn't in the manifest is blocked, not logged-and-allowed.
+
+It's framework-agnostic. The cleanest integration is a decorator:
+
+```python
+from abom import Gate, Action, ActionDenied
+
+gate = Gate(signed_manifest, run_id="loan-doc-agent@1.4.0")
+
+@gate.gated()                       # wrap any tool
+def wire_transfer(amount, to):
+    ...                             # this body NEVER runs if wire_transfer
+                                    # isn't declared in the signed manifest
+
+try:
+    wire_transfer(1_000_000, to="attacker-iban")   # a prompt injection
+except ActionDenied as e:
+    print(e.decision.rule)          # → "tool_not_in_manifest"
+    # the money never moved, and the denial is notarized
+```
+
+::: {.callout-tip appearance="simple"}
+The gate ships three decidable rules, evaluated in order (first failure wins):
+`tool_not_in_manifest`, `endpoint_not_allowed` (egress outside a tool's
+allowlist), and `residency` (confidential data leaving via an egress tool).
+:::
+
+### The demo, end to end
+
+The repo ships a `gate_demo.py` that tells the whole story. Here's the real
+output — an agent doing legitimate work, then getting prompt-injected:
+
+```text
+[1] Agent reads a KYC document (declared tool)
+    → ALLOW  (manifest_allows)
+
+[2] Agent fetches from internal-kyc.bank (allowed endpoint)
+    → ALLOW  (manifest_allows)
+
+[3] ⚠  Prompt injection: agent calls wire_transfer($1,000,000)
+        (wire_transfer is NOT in the signed manifest)
+    → DENY  (tool_not_in_manifest)
+      tool 'wire_transfer' is not in the signed Composition Manifest
+      the money never moved — the call was blocked before execution
+
+[4] Agent tries http_fetch → evil.example.com (not on allowlist)
+    → DENY  (endpoint_not_allowed)
+```
+
+The same logic is available as a CLI exit code, so it drops straight into CI or
+agent middleware — `0` for ALLOW, `1` for DENY:
+
+```bash
+abom gate abom.json --tool read_kyc_doc      # → ALLOW, exit 0
+abom gate abom.json --tool wire_transfer     # → DENY,  exit 1
+```
+
+## 3. What the agent actually did — a Notary you can verify
+
+Here's where it gets interesting, and where most "audit log" products quietly
+fall short.
+
+A linked hash chain proves *internal consistency* — but an operator who controls
+the store can **recompute the entire chain from genesis** after editing a record.
+So a plain chain proves nothing to a third party who doesn't trust the operator.
+That third party — an auditor, a regulator, a cyber-insurer — is exactly who the
+record is *for*.
+
+ABOM's Notary uses an **append-only Merkle transparency log**: the same
+[RFC 6962 / Certificate Transparency](https://datatracker.ietf.org/doc/html/rfc6962)
+construction that underpins the web's certificate ecosystem. It gives you two
+proofs that need **no trust in the operator**:
+
+- **Inclusion proof** — "this decision is in the log, at this position, under
+  this signed tree head" (an `O(log n)` audit path).
+- **Consistency proof** — "the log of size *m* is a prefix of the log of size
+  *n*; nothing already published was edited or deleted."
+
+```python
+from abom import verify_inclusion_hex, verify_payload
+
+decision = gate.check(action)
+
+verify_inclusion_hex(entry, decision.inclusion_proof)   # → True
+verify_payload(head, decision.head_signature)           # signed tree head → True
+```
+
+Running the demo's verification stage against a real run:
+
+```text
+  decisions notarized : 4
+  transparency log    : size=4  root=b63298020ffc410824e941ef…
+
+  auditor checks the wire_transfer denial (seq 2):
+    inclusion proof valid : True   (it IS in the signed log)
+    tree-head signature   : True   (signed by local key 7f7aa8d6efabb18f)
+
+  attacker tries to backdate the record (flip DENY → allow):
+    forged record included : False   (rejected — the proof no longer matches)
+```
+
+That last line is the whole point: you can't quietly flip a `DENY` to an `allow`
+after the fact. The forged entry no longer satisfies the inclusion proof, and the
+signed tree head won't validate. **The trust is cryptographic, not reputational.**
+
+::: {.callout-important appearance="simple"}
+## Key custody is the real blocker, and it's handled as a seam
+
+A demo that signs with a plaintext key on disk is rejected by any bank's security
+team on sight — and it makes the tamper-evidence claim *false*, since whoever
+holds the key can forge tree heads. ABOM puts signing behind a `Signer` protocol:
+`LocalSigner` for dev/CI, and a `KMSSigner` seam where the private key lives in a
+**KMS/HSM and never leaves it**. Verification is backend-independent, so an
+auditor checks the same `ed25519` signature regardless of where the key was held.
+:::
+
+## How it fits together
+
+```text
+        CUSTOMER TRUST BOUNDARY (your infra, air-gap capable)
+  ┌───────────────────────────────────────────────────────────┐
+  │  agent runtime (any framework: LangGraph / CrewAI / MCP)   │
+  │        │                                                   │
+  │        ▼                                                   │
+  │   abom scan ──▶ the gate ──▶ the Notary                    │
+  │   signed         deny-by-       Merkle log: inclusion +    │
+  │   Manifest       default,       consistency proofs,        │
+  │  (composition    BEFORE         signed tree heads (KMS)    │
+  │   _sha256)       execution                                 │
+  └───────────────────────────────────────────────────────────┘
+   keys in KMS/HSM · ed25519 — trust is in the keys + proofs
+```
+
+Scan an agent → gate every tool call against its signed manifest → notarize every
+decision into a log anyone can verify.
+
+## Where this sits next to CycloneDX
+
+ABOM **extends** CycloneDX ML-BOM rather than forking it — it rides the dominant,
+ECMA-standardized SBOM format. CycloneDX answers *"what is it made of."* ABOM adds
+the runtime enforcement and provenance layer it doesn't model. Component types map
+across (`model` → `machine-learning-model`, `tool` → `service`/`application`, and
+so on); the gate, the hash chain and the Merkle Notary are ABOM-only additions.
+
+The `"extends": "CycloneDX ML-BOM"` lineage is declared on every document today;
+a *native* CycloneDX import/export is on the roadmap, not yet shipped — which
+brings us to the honest part.
+
+## Build status — what's real vs. roadmap {#status}
+
+Honesty about maturity is a feature for a trust project. ABOM is **draft v0.1**,
+pre-1.0. As of this writing:
+
+| Capability | Status |
+|---|---|
+| `abom scan` → signed Composition Manifest | ✅ Built |
+| Hash-chained Action Provenance + verification | ✅ Built |
+| `ed25519` signing (`LocalSigner`) | ✅ Built |
+| Inline gate — deny-by-default enforcement | ✅ Built |
+| Merkle transparency log — inclusion + consistency proofs | ✅ Built |
+| Decidable policy checks (`abom verify`) | ✅ Built |
+| KMS/HSM-backed signing (`KMSSigner` seam) | 🚧 In construction |
+| OPA/Rego policy engine (currently JSON) | 🚧 In construction |
+| Hardened, queryable Notary registry + API | 🚧 In construction |
+| SDK runtime hooks / framework adapters | 🚧 In construction |
+| Native CycloneDX / SIEM export · eBPF egress · air-gap bundle | 📋 Planned |
+
+::: {.callout-warning appearance="simple"}
+Two things I'd *not* over-claim. **Completeness:** the gate only mediates the tool
+calls routed through it — it doesn't magically observe egress it can't see, so the
+manifest declares its own capture boundary rather than pretending to catch
+everything. **The regulation timeline:** the EU AI Act's high-risk record-keeping
+obligations (Art. 12) were deferred to ~Dec 2027 by the Digital Omnibus, and DORA
+doesn't literally mandate an agent BOM. The regulatory tailwind is real, but it's
+the *inevitability* slide — not the reason to adopt this today. The reason to
+adopt it today is that your agents are already taking actions you can't bound.
+:::
+
+## Try it
+
+```bash
+pip install abom-cli
+
+abom scan .                                # → signed abom.json
+abom verify abom.json --policy policy.json # enforce policy (exit 1 on violations)
+abom gate abom.json --tool wire_transfer   # deny-by-default, notarized (exit 1)
+```
+
+Or from source, to run the full walkthrough:
+
+```bash
+git clone https://github.com/josephassiga/abom-dev
+cd abom-dev/cli && pip install -e ".[dev]"
+pytest tests/ -q                           # 55 passing, incl. RFC 6962 Merkle proofs
+python demo/gate_demo.py                   # prompt-injection → blocked → notarized → audited
+```
+
+## Closing thought
+
+The market is racing to make agents *do more*. ABOM is a bet on the unglamorous
+layer underneath: making an agent **answerable and controllable** — *what is it
+made of, what is it allowed to do, and what did it do?* — answered in a signed,
+standard, portable artifact you can hand to an auditor.
+
+Underneath the software, it's really a trust primitive. And the trust is
+cryptographic, not reputational — which, for anything an autonomous agent is
+allowed to do with your money, is the only kind that should count.
+
+::: {.callout-note appearance="simple"}
+ABOM is open source (Apache-2.0) and a work in progress. Code, spec and the demo
+live at [github.com/josephassiga/abom-dev](https://github.com/josephassiga/abom-dev);
+the package is [`abom-cli`](https://pypi.org/project/abom-cli/) on PyPI. Feedback
+and spec proposals welcome.
+:::
